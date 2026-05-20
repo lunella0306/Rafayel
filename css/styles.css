@@ -7352,6 +7352,211 @@
     color: var(--accent-color);
         }
 
+        .playlist-categories {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 15px;
+    background: rgba(var(--secondary-bg-rgb), 0.95);
+    border-bottom: 1px solid var(--border-color);
+        }
+
+        .pl-category-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    background: var(--primary-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+        }
+
+        .pl-category-tag:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+        }
+
+        .pl-category-tag.active {
+    background: var(--accent-color);
+    color: #fff;
+    border-color: var(--accent-color);
+        }
+
+        .pl-category-tag.pinned {
+    background: rgba(var(--accent-color-rgb), 0.15);
+    border-color: var(--accent-color);
+        }
+
+        html[data-theme="dark"] .pl-category-tag.active {
+    background: var(--accent-color-dark);
+    border-color: var(--accent-color-dark);
+        }
+
+        html[data-theme="dark"] .pl-category-tag:hover {
+    border-color: var(--accent-color-dark);
+    color: var(--accent-color-dark);
+        }
+
+        /* 网易云搜索样式 */
+        #netease-search-wrapper {
+    margin-top: 10px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+        }
+
+        .netease-search-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+        }
+
+        #netease-search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--primary-bg);
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+        }
+
+        #netease-search-input:focus {
+    border-color: var(--accent-color);
+        }
+
+        #netease-search-btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent-color);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.2s;
+        }
+
+        #netease-search-btn:hover {
+    opacity: 0.85;
+        }
+
+        html[data-theme="dark"] #netease-search-btn {
+    background: var(--accent-color-dark);
+        }
+
+        #netease-search-results {
+    max-height: 200px;
+    overflow-y: auto;
+        }
+
+        .netease-result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+    gap: 10px;
+        }
+
+        .netease-cover {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+        }
+
+        .netease-result-item:hover {
+    border-color: var(--accent-color);
+    background: rgba(var(--accent-color-rgb), 0.05);
+        }
+
+        .netease-song-info {
+    flex: 1;
+    overflow: hidden;
+        }
+
+        .netease-song-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+        }
+
+        .netease-song-artist {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+        }
+
+        .netease-add-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(var(--accent-color-rgb), 0.1);
+    color: var(--accent-color);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+        }
+
+        .netease-add-btn:hover {
+    background: var(--accent-color);
+    color: #fff;
+        }
+
+        html[data-theme="dark"] .netease-add-btn {
+    background: rgba(var(--accent-color-dark-rgb, 139, 92, 246), 0.1);
+    color: var(--accent-color-dark);
+        }
+
+        html[data-theme="dark"] .netease-add-btn:hover {
+    background: var(--accent-color-dark);
+    color: #fff;
+        }
+
+        .netease-loading, .netease-empty, .netease-error {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
+        }
+
+        .netease-error {
+    color: #ef4444;
+        }
+
+        .netease-success {
+    text-align: center;
+    padding: 15px;
+    color: #22c55e;
+    font-size: 13px;
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: 8px;
+        }
+
+        .netease-manual {
+    text-align: center;
+    padding: 15px;
+    color: var(--text-primary);
+    font-size: 13px;
+    background: var(--primary-bg);
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
+        }
+
         .playlist-search-wrapper {
     flex-shrink: 0;
     padding: 0 15px;
@@ -7509,6 +7714,10 @@
         .custom-tag:hover {
     transform: scale(1.2);
     opacity: 1;
+        }
+        .pl-editor-add-song-btn:hover {
+    opacity: 1 !important;
+    transform: scale(1.2);
         }
         .empty-search-result {
     text-align: center;
@@ -11562,3 +11771,99 @@
             border-color: var(--accent-color) !important;
             outline: none;
         }
+
+/* ===== 输入框更多按钮样式 ===== */
+#input-more-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    background: rgba(var(--accent-color-rgb), 0.12);
+    color: var(--accent-color);
+    font-size: 14px;
+    transition: all 0.25s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#input-more-btn:hover {
+    background: rgba(var(--accent-color-rgb), 0.2);
+    transform: scale(1.05);
+}
+#input-more-btn:active {
+    transform: scale(0.95);
+}
+#input-more-btn.open {
+    background: var(--accent-color);
+    color: #fff;
+}
+#input-more-btn.open i {
+    transform: rotate(45deg);
+}
+#input-more-btn i {
+    transition: transform 0.25s ease;
+    font-size: 16px;
+}
+
+/* 展开面板样式 */
+#input-more-panel {
+    position: absolute;
+    bottom: 100%;
+    left: 8px;
+    z-index: 100;
+    margin-bottom: 8px;
+}
+.input-more-panel-inner {
+    display: flex;
+    gap: 8px;
+    padding: 12px 14px;
+    background: var(--secondary-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    animation: inputMoreSlideIn 0.2s ease-out;
+}
+@keyframes inputMoreSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.input-more-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: var(--primary-bg);
+    color: var(--text-primary);
+    transition: all 0.2s;
+    font-size: 10px;
+}
+.input-more-item i {
+    font-size: 18px;
+    color: var(--accent-color);
+}
+.input-more-item span {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+.input-more-item:hover {
+    background: rgba(var(--accent-color-rgb), 0.12);
+    transform: translateY(-2px);
+}
+.input-more-item:active {
+    transform: scale(0.95);
+}

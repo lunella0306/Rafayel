@@ -1502,11 +1502,6 @@ if (_cancelEnvEl) _cancelEnvEl.addEventListener('click', () => {
     "url": "https://img.heliar.top/file/1773543103115_first_snow.mp3.m4a"
   },
   {
-    "title": "我走以后",
-    "sub": "----",
-    "url": "http://music.163.com/song/media/outer/url?id=3347121761.mp3"
-  },
-  {
     "title": "偏爱",
     "sub": "等你的依赖 对你的偏爱",
     "url": "https://music.163.com/song/media/outer/url?id=5238992.mp3"
@@ -2295,12 +2290,143 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
     const cancelAddSongBtn = document.getElementById('cancel-add-song');
     const modalTitleElem = addSongModal.querySelector('.modal-title span');
 
+    // 动态添加分类输入框（如果HTML中没有）
+    let newSongCategory = document.getElementById('new-song-category');
+    if (!newSongCategory) {
+        newSongCategory = document.createElement('input');
+        newSongCategory.type = 'text';
+        newSongCategory.className = 'modal-input';
+        newSongCategory.id = 'new-song-category';
+        newSongCategory.placeholder = '分类 (可选，如: 恋与深空)';
+        newSongUrl.insertAdjacentElement('afterend', newSongCategory);
+    }
+
+    // 动态添加网易云搜索区域
+    let neteaseSearchWrapper = document.getElementById('netease-search-wrapper');
+    if (!neteaseSearchWrapper) {
+        neteaseSearchWrapper = document.createElement('div');
+        neteaseSearchWrapper.id = 'netease-search-wrapper';
+        neteaseSearchWrapper.innerHTML = `
+            <div class="netease-search-header">
+                <input type="text" id="netease-search-input" placeholder="搜索网易云歌曲..." />
+                <button id="netease-search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="netease-search-results"></div>
+        `;
+        newSongCategory.insertAdjacentElement('afterend', neteaseSearchWrapper);
+    }
+    const neteaseSearchInput = document.getElementById('netease-search-input');
+    const neteaseSearchBtn = document.getElementById('netease-search-btn');
+    const neteaseSearchResults = document.getElementById('netease-search-results');
+
+    // 网易云搜索功能 - 支持搜索和粘贴iframe代码
+    let searchTimeout = null;
+    async function searchNetease(keyword) {
+        if (!keyword.trim()) {
+            neteaseSearchResults.innerHTML = '';
+            return;
+        }
+        
+        // 检测是否是iframe代码，自动提取歌曲ID
+        const iframeMatch = keyword.match(/id=(\d+)/);
+        if (iframeMatch) {
+            const songId = iframeMatch[1];
+            newSongUrl.value = `https://music.163.com/song/media/outer/url?id=${songId}.mp3`;
+            showNotification('已提取歌曲ID并填充链接，请填写歌名', 'success');
+            neteaseSearchResults.innerHTML = `<div class="netease-success">✓ 已提取歌曲ID: ${songId}</div>`;
+            return;
+        }
+        
+        // 检测是否是网易云歌曲链接
+        const songUrlMatch = keyword.match(/song\?id=(\d+)/);
+        if (songUrlMatch) {
+            const songId = songUrlMatch[1];
+            newSongUrl.value = `https://music.163.com/song/media/outer/url?id=${songId}.mp3`;
+            showNotification('已提取歌曲ID并填充链接，请填写歌名', 'success');
+            neteaseSearchResults.innerHTML = `<div class="netease-success">✓ 已提取歌曲ID: ${songId}</div>`;
+            return;
+        }
+        
+        neteaseSearchResults.innerHTML = '<div class="netease-loading">搜索中...</div>';
+        
+        try {
+            // 使用网易云官方搜索API（通过CORS代理）
+            const searchUrl = `https://corsproxy.io/?${encodeURIComponent('https://music.163.com/api/search/get?s=' + keyword + '&type=1&limit=10')}`;
+            
+            const response = await fetch(searchUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0'
+                }
+            });
+            const data = await response.json();
+            
+            if (!data.result || !data.result.songs || data.result.songs.length === 0) {
+                neteaseSearchResults.innerHTML = '<div class="netease-empty">未找到相关歌曲</div>';
+                return;
+            }
+            
+            neteaseSearchResults.innerHTML = '';
+            data.result.songs.forEach(song => {
+                const songId = song.id;
+                const title = song.name;
+                const artist = song.artists ? song.artists.map(a => a.name).join(', ') : '';
+                const picId = song.album?.picId;
+                const coverUrl = picId ? `https://p1.music.126.net/${picId}/${picId}.jpg` : 'https://p1.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg';
+                
+                const item = document.createElement('div');
+                item.className = 'netease-result-item';
+                item.innerHTML = `
+                    <img class="netease-cover" src="${coverUrl}" onerror="this.src='https://p1.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg'" />
+                    <div class="netease-song-info">
+                        <div class="netease-song-title">${title}</div>
+                        <div class="netease-song-artist">${artist}</div>
+                    </div>
+                    <button class="netease-add-btn" title="添加到歌单"><i class="fas fa-plus"></i></button>
+                `;
+                item.querySelector('.netease-add-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    newSongTitle.value = title;
+                    newSongSub.value = artist;
+                    newSongUrl.value = `https://music.163.com/song/media/outer/url?id=${songId}.mp3`;
+                    showNotification('已填充歌曲信息，点击"添加播放"确认', 'success');
+                });
+                neteaseSearchResults.appendChild(item);
+            });
+        } catch (error) {
+            console.error('搜索失败:', error);
+            neteaseSearchResults.innerHTML = `
+                <div class="netease-manual">
+                    <div style="margin-bottom:8px;">搜索失败，请重试</div>
+                    <div style="font-size:12px;color:var(--text-secondary);">
+                        或直接粘贴：<br>
+                        • 网易云外链iframe代码<br>
+                        • 或歌曲链接
+                    </div>
+                </div>`;
+        }
+    }
+
+    neteaseSearchBtn.addEventListener('click', () => searchNetease(neteaseSearchInput.value));
+    neteaseSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchNetease(neteaseSearchInput.value);
+    });
+    // 防抖搜索
+    neteaseSearchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (e.target.value.length >= 2) {
+                searchNetease(e.target.value);
+            }
+        }, 500);
+    });
+
     let currentIndex = 0;
     let isPlaying = false;
     let playMode = 'sequence';
     let editModeIndex = -1;
     let searchTerm = '';
     let isSearchVisible = false;
+    let currentCategory = ''; // 当前选中的分类筛选
 
     // 保存播放状态的函数
     const saveMusicState = () => {
@@ -2419,9 +2545,267 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         newSongTitle.value = song.title;
         newSongSub.value = song.sub;
         newSongUrl.value = song.url;
+        newSongCategory.value = song.category || '';
         modalTitleElem.innerText = "编辑歌曲信息";
         confirmAddSongBtn.innerText = "保存修改";
         showModal(addSongModal);
+    }
+
+    // 歌单编辑器 - 管理分类
+    let categoryOrder = []; // 分类排序
+    let pinnedCategories = []; // 置顶的分类
+    let draggedCategory = null;
+    
+    function openPlaylistEditor() {
+        const categories = getAllCategories();
+        // 如果没有保存的排序，使用默认顺序
+        if (categoryOrder.length === 0 || categories.some(c => !categoryOrder.includes(c))) {
+            categoryOrder = [...categories];
+        }
+        
+        const editorOverlay = document.createElement('div');
+        editorOverlay.id = 'playlist-editor-overlay';
+        editorOverlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;overflow-y:auto;padding:20px;';
+        
+        let editorContent = `
+            <div style="background:var(--secondary-bg);border-radius:20px;width:100%;max-width:360px;max-height:80vh;box-shadow:0 20px 60px rgba(0,0,0,0.4);border:1px solid var(--border-color);display:flex;flex-direction:column;overflow:hidden;">
+                <div style="padding:16px 20px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+                    <div style="font-weight:600;font-size:16px;">修改歌单</div>
+                    <button id="pl-editor-close" style="width:32px;height:32px;border-radius:50%;border:none;background:var(--primary-bg);color:var(--text-primary);cursor:pointer;font-size:18px;">&times;</button>
+                </div>
+                <div style="padding:8px 15px;font-size:12px;color:var(--text-secondary);background:var(--primary-bg);">长按拖拽排序 · 点击❤️置顶(最多3个)</div>
+                <div id="pl-editor-list" style="flex:1;overflow-y:auto;padding:10px;">
+        `;
+        
+        if (categories.length === 0) {
+            editorContent += `<div style="text-align:center;padding:40px;color:var(--text-secondary);">暂无分类歌单</div>`;
+        } else {
+            // 置顶的分类排在前面
+            const pinnedSet = new Set(pinnedCategories.filter(c => categories.includes(c)));
+            const sortedCategories = categoryOrder.filter(c => categories.includes(c));
+            sortedCategories.sort((a, b) => {
+                const aPinned = pinnedSet.has(a);
+                const bPinned = pinnedSet.has(b);
+                if (aPinned && !bPinned) return -1;
+                if (!aPinned && bPinned) return 1;
+                return 0;
+            });
+            
+            sortedCategories.forEach((cat, index) => {
+                const songCount = songs.filter(s => s.category === cat).length;
+                const isPinned = pinnedSet.has(cat);
+                editorContent += `
+                    <div class="pl-editor-item" data-category="${cat}" draggable="true" style="display:flex;align-items:center;gap:10px;padding:12px;margin-bottom:8px;background:var(--primary-bg);border-radius:12px;border:1px solid ${isPinned ? 'var(--accent-color)' : 'var(--border-color)'};cursor:grab;${isPinned ? 'box-shadow:0 0 0 1px rgba(var(--accent-color-rgb),0.3);' : ''}">
+                        <span class="pl-drag-handle" style="color:var(--text-secondary);font-size:12px;">☰</span>
+                        <span class="pl-pin-btn" data-category="${cat}" title="置顶" style="font-size:14px;cursor:pointer;opacity:${isPinned ? 1 : 0.3};transition:opacity 0.2s;">${isPinned ? '❤️' : '🤍'}</span>
+                        <div style="flex:1;overflow:hidden;">
+                            <div style="font-weight:500;font-size:14px;color:var(--text-primary);">${cat}</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">${songCount} 首歌曲</div>
+                        </div>
+                        <span class="pl-editor-add-song-btn" data-category="${cat}" title="添加歌曲" style="flex-shrink:0;font-size:18px;cursor:pointer;opacity:0.5;transition:opacity 0.2s;color:var(--accent-color);font-weight:300;">+</span>
+                        <span class="pl-editor-rename-btn custom-tag" data-category="${cat}" title="重命名" style="flex-shrink:0;"></span>
+                        <span class="pl-editor-del-btn action-icon-btn delete" data-category="${cat}" title="删除" style="opacity:0.6;font-size:16px;cursor:pointer;">&times;</span>
+                    </div>
+                `;
+            });
+        }
+        
+        editorContent += `
+                </div>
+                <div style="padding:16px 20px;border-top:1px solid var(--border-color);flex-shrink:0;">
+                    <button id="pl-editor-done" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent-color);color:#fff;font-weight:600;font-size:14px;cursor:pointer;">完成</button>
+                </div>
+            </div>
+        `;
+        
+        editorOverlay.innerHTML = editorContent;
+        document.body.appendChild(editorOverlay);
+        
+        // 关闭按钮
+        const closeEditor = () => editorOverlay.remove();
+        editorOverlay.querySelector('#pl-editor-close').onclick = closeEditor;
+        editorOverlay.querySelector('#pl-editor-done').onclick = closeEditor;
+        editorOverlay.addEventListener('click', (e) => { if(e.target === editorOverlay) closeEditor(); });
+        
+        // 拖拽排序
+        const editorList = editorOverlay.querySelector('#pl-editor-list');
+        const editorItems = editorOverlay.querySelectorAll('.pl-editor-item[draggable]');
+        
+        editorItems.forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                draggedCategory = item.dataset.category;
+                item.style.opacity = '0.4';
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            item.addEventListener('dragend', () => {
+                item.style.opacity = '1';
+                draggedCategory = null;
+                // 移除所有拖拽指示样式
+                editorList.querySelectorAll('.pl-editor-item').forEach(el => {
+                    el.style.borderTop = '';
+                    el.style.borderBottom = '';
+                });
+            });
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                // 清除其他项的指示
+                editorList.querySelectorAll('.pl-editor-item').forEach(el => {
+                    el.style.borderTop = '';
+                    el.style.borderBottom = '';
+                });
+                // 高亮目标位置
+                const rect = item.getBoundingClientRect();
+                const midY = rect.top + rect.height / 2;
+                if (e.clientY < midY) {
+                    item.style.borderTop = '2px solid var(--accent-color)';
+                } else {
+                    item.style.borderBottom = '2px solid var(--accent-color)';
+                }
+            });
+            item.addEventListener('dragleave', () => {
+                item.style.borderTop = '';
+                item.style.borderBottom = '';
+            });
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const targetCat = item.dataset.category;
+                if (draggedCategory && draggedCategory !== targetCat) {
+                    const fromIdx = categoryOrder.indexOf(draggedCategory);
+                    const toIdx = categoryOrder.indexOf(targetCat);
+                    if (fromIdx !== -1 && toIdx !== -1) {
+                        categoryOrder.splice(fromIdx, 1);
+                        const rect = item.getBoundingClientRect();
+                        const midY = rect.top + rect.height / 2;
+                        const insertIdx = e.clientY < midY ? toIdx : toIdx + 1;
+                        categoryOrder.splice(insertIdx > fromIdx ? insertIdx - 1 : insertIdx, 0, draggedCategory);
+                        // 保存排序并刷新
+                        savePlaylist();
+                        closeEditor();
+                        setTimeout(() => openPlaylistEditor(), 100);
+                    }
+                }
+            });
+        });
+        
+        // 置顶按钮
+        editorOverlay.querySelectorAll('.pl-pin-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const catName = btn.dataset.category;
+                const idx = pinnedCategories.indexOf(catName);
+                
+                if (idx !== -1) {
+                    // 取消置顶
+                    pinnedCategories.splice(idx, 1);
+                    showNotification('已取消置顶', 'success');
+                } else {
+                    // 添加置顶
+                    if (pinnedCategories.length >= 3) {
+                        showNotification('最多只能置顶3个歌单', 'warning');
+                        return;
+                    }
+                    pinnedCategories.push(catName);
+                    showNotification('已置顶', 'success');
+                }
+                closeEditor();
+                setTimeout(() => openPlaylistEditor(), 100);
+            };
+        });
+        
+        // 重命名按钮
+        editorOverlay.querySelectorAll('.pl-editor-rename-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const oldName = btn.dataset.category;
+                const newName = prompt('请输入新的分类名称：', oldName);
+                if (newName && newName.trim() && newName !== oldName) {
+                    songs.forEach(song => {
+                        if (song.category === oldName) {
+                            song.category = newName.trim();
+                        }
+                    });
+                    savePlaylist();
+                    closeEditor();
+                    setTimeout(() => openPlaylistEditor(), 100);
+                    showNotification('分类已重命名', 'success');
+                }
+            };
+        });
+        
+        // 添加歌曲按钮
+        editorOverlay.querySelectorAll('.pl-editor-add-song-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const catName = btn.dataset.category;
+                closeEditor();
+                // 打开添加歌曲弹窗并预填分类
+                editModeIndex = -1;
+                newSongTitle.value = '';
+                newSongSub.value = '';
+                newSongUrl.value = '';
+                newSongCategory.value = catName;
+                modalTitleElem.innerText = `添加歌曲到「${catName}」`;
+                confirmAddSongBtn.innerText = "添加播放";
+                showModal(addSongModal);
+                newSongTitle.focus();
+            };
+        });
+        
+        // 删除按钮 - 显示选项
+        editorOverlay.querySelectorAll('.pl-editor-del-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const catName = btn.dataset.category;
+                const songCount = songs.filter(s => s.category === catName).length;
+                
+                // 创建确认弹窗
+                const confirmOverlay = document.createElement('div');
+                confirmOverlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;';
+                confirmOverlay.innerHTML = `
+                    <div style="background:var(--secondary-bg);border-radius:16px;padding:20px;width:280px;box-shadow:0 10px 40px rgba(0,0,0,0.3);border:1px solid var(--border-color);">
+                        <div style="text-align:center;font-weight:600;margin-bottom:15px;">删除「${catName}」</div>
+                        <div style="text-align:center;font-size:13px;color:var(--text-secondary);margin-bottom:20px;">该分类下有 ${songCount} 首歌曲</div>
+                        <button id="del-category-only" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);cursor:pointer;font-size:14px;margin-bottom:8px;">
+                            只删除分类<br><span style="font-size:11px;color:var(--text-secondary);">歌曲保留，变为无分类</span>
+                        </button>
+                        <button id="del-all" style="width:100%;padding:12px;border-radius:10px;border:none;background:#ef4444;color:#fff;cursor:pointer;font-size:14px;margin-bottom:8px;">
+                            删除全部<br><span style="font-size:11px;opacity:0.8;">分类和歌曲一起删除</span>
+                        </button>
+                        <button id="del-cancel" style="width:100%;padding:10px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:13px;">取消</button>
+                    </div>
+                `;
+                document.body.appendChild(confirmOverlay);
+                
+                // 取消
+                confirmOverlay.querySelector('#del-cancel').onclick = () => confirmOverlay.remove();
+                confirmOverlay.addEventListener('click', (ev) => { if(ev.target === confirmOverlay) confirmOverlay.remove(); });
+                
+                // 只删除分类
+                confirmOverlay.querySelector('#del-category-only').onclick = () => {
+                    songs.forEach(song => {
+                        if (song.category === catName) {
+                            delete song.category;
+                        }
+                    });
+                    savePlaylist();
+                    confirmOverlay.remove();
+                    closeEditor();
+                    setTimeout(() => openPlaylistEditor(), 100);
+                    showNotification('分类已删除，歌曲保留', 'success');
+                };
+                
+                // 删除全部
+                confirmOverlay.querySelector('#del-all').onclick = () => {
+                    songs = songs.filter(song => song.category !== catName);
+                    savePlaylist();
+                    confirmOverlay.remove();
+                    closeEditor();
+                    setTimeout(() => openPlaylistEditor(), 100);
+                    showNotification('分类和歌曲已删除', 'success');
+                };
+            };
+        });
     }
 
     function openAddModal() {
@@ -2429,9 +2813,16 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         newSongTitle.value = '';
         newSongSub.value = '';
         newSongUrl.value = '';
+        newSongCategory.value = '';
         modalTitleElem.innerText = "添加自定义歌曲";
         confirmAddSongBtn.innerText = "添加播放";
         showModal(addSongModal);
+    }
+
+    function getAllCategories() {
+        const cats = new Set();
+        songs.forEach(s => { if (s.category) cats.add(s.category); });
+        return Array.from(cats);
     }
 
     function renderPlaylist() {
@@ -2449,6 +2840,50 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
     <input type="file" id="pl-import-input" accept=".json" style="display:none">
 `;
         playlist.appendChild(header);
+
+        // 分类标签区域
+        const categories = getAllCategories();
+        if (categories.length > 0) {
+            const categoryWrapper = document.createElement('div');
+            categoryWrapper.className = 'playlist-categories';
+            
+            const allTag = document.createElement('span');
+            allTag.className = `pl-category-tag ${currentCategory === '' ? 'active' : ''}`;
+            allTag.textContent = '全部';
+            allTag.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentCategory = '';
+                renderPlaylist();
+            });
+            categoryWrapper.appendChild(allTag);
+            
+            // 使用排序后的顺序显示分类（置顶在前）
+            const pinnedSet = new Set(pinnedCategories.filter(c => categories.includes(c)));
+            let sortedCats = (categoryOrder && categoryOrder.length > 0) 
+                ? categoryOrder.filter(c => categories.includes(c)) 
+                : [...categories];
+            sortedCats.sort((a, b) => {
+                const aPinned = pinnedSet.has(a);
+                const bPinned = pinnedSet.has(b);
+                if (aPinned && !bPinned) return -1;
+                if (!aPinned && bPinned) return 1;
+                return 0;
+            });
+            sortedCats.forEach(cat => {
+                const tag = document.createElement('span');
+                const isPinned = pinnedSet.has(cat);
+                tag.className = `pl-category-tag ${currentCategory === cat ? 'active' : ''}${isPinned ? ' pinned' : ''}`;
+                tag.innerHTML = isPinned ? `<span style="margin-right:3px;">❤️</span>${cat}` : cat;
+                tag.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    currentCategory = cat;
+                    renderPlaylist();
+                });
+                categoryWrapper.appendChild(tag);
+            });
+            
+            playlist.appendChild(categoryWrapper);
+        }
 
         const searchWrapper = document.createElement('div');
         searchWrapper.className = `playlist-search-wrapper ${isSearchVisible ? 'active' : ''}`;
@@ -2486,6 +2921,11 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
                 <div style="background:var(--secondary-bg);border-radius:16px;padding:20px;width:280px;box-shadow:0 10px 40px rgba(0,0,0,0.3);border:1px solid var(--border-color);display:flex;flex-direction:column;gap:12px;">
                     <div style="text-align:center;font-weight:600;margin-bottom:5px;">歌单管理</div>
                     
+                    <button id="_pl_opt_edit" style="padding:12px;border-radius:10px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;transition:0.2s;">
+                        <div style="width:32px;height:32px;background:rgba(var(--accent-color-rgb),0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent-color);"><i class="fas fa-edit"></i></div>
+                        修改歌单
+                    </button>
+                    
                     <button id="_pl_opt_import" style="padding:12px;border-radius:10px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;transition:0.2s;">
                         <div style="width:32px;height:32px;background:rgba(var(--accent-color-rgb),0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent-color);"><i class="fas fa-file-import"></i></div>
                         导入歌单文件
@@ -2504,9 +2944,15 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
             const closeOpt = () => overlay.remove();
             overlay.addEventListener('click', (ev) => { if(ev.target === overlay) closeOpt(); });
             const plOptCancelBtn = document.getElementById('_pl_opt_cancel');
+            const plOptEditBtn = document.getElementById('_pl_opt_edit');
             const plOptExportBtn = document.getElementById('_pl_opt_export');
             const plOptImportBtn = document.getElementById('_pl_opt_import');
             if (plOptCancelBtn) plOptCancelBtn.onclick = closeOpt;
+
+            if (plOptEditBtn) plOptEditBtn.onclick = () => {
+                closeOpt();
+                openPlaylistEditor();
+            };
 
             if (plOptExportBtn) plOptExportBtn.onclick = () => {
                 closeOpt();
@@ -2577,12 +3023,22 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
     function renderListContent(container) {
         container.innerHTML = '';
         
-        const filteredSongs = songs.map((s, i) => ({...s, originalIndex: i}))
-                                   .filter(s => s.title.toLowerCase().includes(searchTerm) || 
+        let filteredSongs = songs.map((s, i) => ({...s, originalIndex: i}));
+
+        // 分类筛选
+        if (currentCategory) {
+            filteredSongs = filteredSongs.filter(s => s.category === currentCategory);
+        }
+
+        // 搜索筛选
+        if (searchTerm) {
+            filteredSongs = filteredSongs.filter(s => s.title.toLowerCase().includes(searchTerm) || 
                                                 s.sub.toLowerCase().includes(searchTerm));
+        }
 
         if (filteredSongs.length === 0) {
-            container.innerHTML = `<div class="empty-search-result">未找到 "${searchTerm}" 相关歌曲</div>`;
+            const msg = searchTerm ? `未找到 "${searchTerm}" 相关歌曲` : `"${currentCategory}" 分类下暂无歌曲`;
+            container.innerHTML = `<div class="empty-search-result">${msg}</div>`;
             return;
         }
 
@@ -2608,17 +3064,16 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
                     <div class="song-sub-row">${displaySub}</div>
                 </div>
                 <div class="item-actions">
-                    ${song.isCustom ? '<span class="custom-tag" title="自定义歌曲"></span>' : ''}
+                    <span class="action-icon-btn edit" title="编辑"><i class="fas fa-pen" style="font-size:10px;"></i></span>
                     <span class="action-icon-btn delete" title="移除">&times;</span>
                 </div>
             `;
 
-            if (song.isCustom) {
-                div.querySelector('.custom-tag').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openEditModal(realIndex);
-                });
-            }
+            // 所有歌曲都可以编辑
+            div.querySelector('.edit').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal(realIndex);
+            });
 
             div.querySelector('.delete').addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -2663,6 +3118,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         const title = newSongTitle.value.trim();
         const sub = newSongSub.value.trim();
         const url = newSongUrl.value.trim();
+        const category = newSongCategory.value.trim();
 
         if (!title || !url) {
             showNotification('歌名和链接不能为空', 'error');
@@ -2675,6 +3131,10 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
             url,
             isCustom: true
         };
+        
+        if (category) {
+            songData.category = category;
+        }
 
         if (editModeIndex >= 0) {
             songs[editModeIndex] = songData;
@@ -2690,6 +3150,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         newSongTitle.value = '';
         newSongSub.value = '';
         newSongUrl.value = '';
+        newSongCategory.value = '';
         hideModal(addSongModal);
     });
 
@@ -3151,10 +3612,17 @@ window.toggleCollapsedExtras = function() {
         const primary = document.getElementById(primaryId);
         if (extra && primary && !extra._linked) {
             extra._linked = true;
-            extra.addEventListener('click', (e) => { e.stopPropagation(); primary.click(); });
+            extra.addEventListener('click', (e) => { 
+                e.stopPropagation(); 
+                // 收起面板
+                panel.style.display = 'none';
+                btn.classList.remove('open');
+                primary.click(); 
+            });
         }
     }
     wireExtra('combo-btn-extra', 'combo-btn');
+    wireExtra('continue-btn-extra', 'continue-btn');
 };
 
 window.exitCollapseMode = function() {

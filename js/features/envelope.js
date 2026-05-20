@@ -15,6 +15,44 @@ function getMyName() {
     return (typeof settings !== 'undefined' && settings.myName) || '我';
 }
 
+// 随机生成Ta的表态（新概率：特别喜欢12%，喜欢36%，一般4%，惊讶12%，不表态36%）
+function generateRandomTaReaction() {
+    const rand = Math.random();
+    if (rand < 0.12) {
+        return 'superLike'; // 特别喜欢 12%
+    } else if (rand < 0.48) {
+        return 'like'; // 喜欢 36%
+    } else if (rand < 0.52) {
+        return 'dislike'; // 一般 4%
+    } else if (rand < 0.64) {
+        return 'surprised'; // 惊讶 12%
+    }
+    return null; // 不表态 36%
+}
+
+// 获取表态的显示文本和样式
+function getTaReactionDisplayInfo(reactionType) {
+    const reactionMap = {
+        'superLike': {
+            text: '特别喜欢',
+            style: 'background:linear-gradient(135deg,#FFD700,#FFA500);box-shadow:0 2px 8px rgba(255,165,0,0.5);'
+        },
+        'like': {
+            text: '喜欢',
+            style: 'background:linear-gradient(135deg,#ff6b81,#ff4757);box-shadow:0 2px 8px rgba(255,71,87,0.4);'
+        },
+        'dislike': {
+            text: '一般',
+            style: 'background:rgba(100,100,100,0.85);'
+        },
+        'surprised': {
+            text: '惊讶',
+            style: 'background:linear-gradient(135deg,#9C27B0,#7B1FA2);box-shadow:0 2px 8px rgba(156,39,176,0.4);'
+        }
+    };
+    return reactionMap[reactionType] || { text: '', style: '' };
+}
+
 // 切换小纸条抽屉展开/折叠
 window.toggleNoteDrawer = function() {
     const drawer = document.getElementById('env-note-drawer');
@@ -229,13 +267,16 @@ async function checkEnvelopeStatus() {
                 // 找到最后一条用户回复
                 for (let i = letter.conversationHistory.length - 1; i >= 0; i--) {
                     if (letter.conversationHistory[i].type === 'myReply') {
-                        // 随机表态：71%喜欢，5%一般，24%不表态
-                        const rand = Math.random();
-                        if (rand < 0.71) {
-                            letter.conversationHistory[i].taReaction = 'like';
-                            letter.conversationHistory[i].taReactionUnread = true;
-                        } else if (rand < 0.76) {
-                            letter.conversationHistory[i].taReaction = 'dislike';
+                        // 随机表态（新概率：特别喜欢12%，喜欢36%，一般4%，惊讶12%，不表态36%）
+                        const reaction = generateRandomTaReaction();
+                        if (reaction) {
+                            // 先清除该信件中所有旧的未读表态标记
+                            letter.conversationHistory.forEach(item => {
+                                if (item.taReactionUnread) item.taReactionUnread = false;
+                            });
+                            if (letter.myReplyTaReactionUnread) letter.myReplyTaReactionUnread = false;
+                            
+                            letter.conversationHistory[i].taReaction = reaction;
                             letter.conversationHistory[i].taReactionUnread = true;
                         }
                         break;
@@ -243,12 +284,17 @@ async function checkEnvelopeStatus() {
                 }
             } else if (letter.myReply) {
                 // 兼容旧数据：对旧格式的myReply表态
-                const rand = Math.random();
-                if (rand < 0.71) {
-                    letter.myReplyTaReaction = 'like';
-                    letter.myReplyTaReactionUnread = true;
-                } else if (rand < 0.76) {
-                    letter.myReplyTaReaction = 'dislike';
+                const reaction = generateRandomTaReaction();
+                if (reaction) {
+                    // 先清除该信件中所有旧的未读表态标记
+                    if (letter.conversationHistory) {
+                        letter.conversationHistory.forEach(item => {
+                            if (item.taReactionUnread) item.taReactionUnread = false;
+                        });
+                    }
+                    if (letter.myReplyTaReactionUnread) letter.myReplyTaReactionUnread = false;
+                    
+                    letter.myReplyTaReaction = reaction;
                     letter.myReplyTaReactionUnread = true;
                 }
             }
@@ -285,13 +331,16 @@ async function checkEnvelopeStatus() {
                 // 找到最后一条用户回复
                 for (let i = letter.conversationHistory.length - 1; i >= 0; i--) {
                     if (letter.conversationHistory[i].type === 'myReply') {
-                        // 随机表态：71%喜欢，5%一般，24%不表态
-                        const rand = Math.random();
-                        if (rand < 0.71) {
-                            letter.conversationHistory[i].taReaction = 'like';
-                            letter.conversationHistory[i].taReactionUnread = true;
-                        } else if (rand < 0.76) {
-                            letter.conversationHistory[i].taReaction = 'dislike';
+                        // 随机表态（新概率：特别喜欢12%，喜欢36%，一般4%，惊讶12%，不表态36%）
+                        const reaction = generateRandomTaReaction();
+                        if (reaction) {
+                            // 先清除该信件中所有旧的未读表态标记
+                            letter.conversationHistory.forEach(item => {
+                                if (item.taReactionUnread) item.taReactionUnread = false;
+                            });
+                            if (letter.myReplyTaReactionUnread) letter.myReplyTaReactionUnread = false;
+                            
+                            letter.conversationHistory[i].taReaction = reaction;
                             letter.conversationHistory[i].taReactionUnread = true;
                         }
                         break;
@@ -299,12 +348,17 @@ async function checkEnvelopeStatus() {
                 }
             } else if (letter.myReply) {
                 // 兼容旧数据：对旧格式的myReply表态
-                const rand = Math.random();
-                if (rand < 0.71) {
-                    letter.myReplyTaReaction = 'like';
-                    letter.myReplyTaReactionUnread = true;
-                } else if (rand < 0.76) {
-                    letter.myReplyTaReaction = 'dislike';
+                const reaction = generateRandomTaReaction();
+                if (reaction) {
+                    // 先清除该信件中所有旧的未读表态标记
+                    if (letter.conversationHistory) {
+                        letter.conversationHistory.forEach(item => {
+                            if (item.taReactionUnread) item.taReactionUnread = false;
+                        });
+                    }
+                    if (letter.myReplyTaReactionUnread) letter.myReplyTaReactionUnread = false;
+                    
+                    letter.myReplyTaReaction = reaction;
                     letter.myReplyTaReactionUnread = true;
                 }
             }
@@ -341,12 +395,9 @@ async function checkEnvelopeStatus() {
         }
         
         // Ta对用户的回复进行表态
-        const rand = Math.random();
-        if (rand < 0.71) {
-            randomLetter.myReplyTaReaction = 'like';
-            randomLetter.myReplyTaReactionUnread = true;
-        } else if (rand < 0.76) {
-            randomLetter.myReplyTaReaction = 'dislike';
+        const reaction = generateRandomTaReaction();
+        if (reaction) {
+            randomLetter.myReplyTaReaction = reaction;
             randomLetter.myReplyTaReactionUnread = true;
         }
         
@@ -379,12 +430,9 @@ async function checkEnvelopeStatus() {
         }
         
         // Ta对用户的回复进行表态
-        const rand = Math.random();
-        if (rand < 0.71) {
-            randomLetter.myReplyTaReaction = 'like';
-            randomLetter.myReplyTaReactionUnread = true;
-        } else if (rand < 0.76) {
-            randomLetter.myReplyTaReaction = 'dislike';
+        const reaction = generateRandomTaReaction();
+        if (reaction) {
+            randomLetter.myReplyTaReaction = reaction;
             randomLetter.myReplyTaReactionUnread = true;
         }
         
@@ -566,14 +614,15 @@ function triggerRandomTaReaction() {
         
         // 随机选择一条进行表态
         const randomIndex = unrepliedMyReplies[Math.floor(Math.random() * unrepliedMyReplies.length)];
-        const rand = Math.random();
-        
-        if (rand < 0.71) {
-            letter.conversationHistory[randomIndex].taReaction = 'like';
-            letter.conversationHistory[randomIndex].taReactionUnread = true;
-            changed = true;
-        } else if (rand < 0.76) {
-            letter.conversationHistory[randomIndex].taReaction = 'dislike';
+        const reaction = generateRandomTaReaction();
+        if (reaction) {
+            // 先清除该信件中所有旧的未读表态标记
+            letter.conversationHistory.forEach(item => {
+                if (item.taReactionUnread) item.taReactionUnread = false;
+            });
+            if (letter.myReplyTaReactionUnread) letter.myReplyTaReactionUnread = false;
+            
+            letter.conversationHistory[randomIndex].taReaction = reaction;
             letter.conversationHistory[randomIndex].taReactionUnread = true;
             changed = true;
         }
@@ -594,16 +643,17 @@ function triggerRandomTaReaction() {
         if (unrepliedMyReplies.length === 0) return;
         
         // 随机选择一条进行表态
-        const randomIndex = unrepliedMyReplies[Math.floor(Math.random() * unrepliedMyReplies.length)];
-        const rand = Math.random();
-        
-        if (rand < 0.71) {
-            letter.conversationHistory[randomIndex].taReaction = 'like';
-            letter.conversationHistory[randomIndex].taReactionUnread = true;
-            changed = true;
-        } else if (rand < 0.76) {
-            letter.conversationHistory[randomIndex].taReaction = 'dislike';
-            letter.conversationHistory[randomIndex].taReactionUnread = true;
+        const randomIndex2 = unrepliedMyReplies[Math.floor(Math.random() * unrepliedMyReplies.length)];
+        const reaction2 = generateRandomTaReaction();
+        if (reaction2) {
+            // 先清除该信件中所有旧的未读表态标记
+            letter.conversationHistory.forEach(item => {
+                if (item.taReactionUnread) item.taReactionUnread = false;
+            });
+            if (letter.myReplyTaReactionUnread) letter.myReplyTaReactionUnread = false;
+            
+            letter.conversationHistory[randomIndex2].taReaction = reaction2;
+            letter.conversationHistory[randomIndex2].taReactionUnread = true;
             changed = true;
         }
     });
@@ -1227,8 +1277,9 @@ function renderInboxReplyItem(letter) {
     const canReply = letter.taReplyStatus !== 'pending' && 
         (!letter.myReply || letter.taReply || (lastItem && lastItem.type === 'taReply'));
     
-    const taReactionText = taReactionType === 'like' ? '喜欢' : '一般';
-    const taReactionStyle = taReactionType === 'like' ? 'background:linear-gradient(135deg,#ff6b81,#ff4757);box-shadow:0 2px 8px rgba(255,71,87,0.4);' : 'background:rgba(100,100,100,0.85);';
+    const reactionInfo = getTaReactionDisplayInfo(taReactionType);
+    const taReactionText = reactionInfo.text;
+    const taReactionStyle = reactionInfo.style;
     // 未读表态时添加发光效果
     const taReactionGlow = unreadTaReactionCount > 0 ? 'animation:reactionPulse 1.5s ease-in-out infinite;' : '';
     
@@ -1360,8 +1411,9 @@ function renderInboxLetterItem(letter) {
     const canReply = letter.taReplyStatus !== 'pending' && 
         (!letter.myReply || letter.taReply || (lastItem && lastItem.type === 'taReply'));
     
-    const taReactionText = taReactionType === 'like' ? '喜欢' : '一般';
-    const taReactionStyle = taReactionType === 'like' ? 'background:linear-gradient(135deg,#ff6b81,#ff4757);box-shadow:0 2px 8px rgba(255,71,87,0.4);' : 'background:rgba(100,100,100,0.85);';
+    const reactionInfo = getTaReactionDisplayInfo(taReactionType);
+    const taReactionText = reactionInfo.text;
+    const taReactionStyle = reactionInfo.style;
     // 未读表态时添加发光效果
     const taReactionGlow = unreadTaReactionCount > 0 ? 'animation:reactionPulse 1.5s ease-in-out infinite;' : '';
     
@@ -1369,7 +1421,7 @@ function renderInboxLetterItem(letter) {
     <style>@keyframes reactionPulse{0%,100%{box-shadow:0 2px 8px rgba(255,71,87,0.4);}50%{box-shadow:0 2px 12px rgba(255,71,87,0.7);}}</style>
     <div class="env-letter-item partner ${isNew ? 'env-letter-new' : ''} ${hasNewReply ? 'has-new-ta-reply' : ''}" onclick="viewPartnerLetter('${letter.id}')" style="position:relative;border-left:3px solid rgba(var(--accent-color-rgb),0.6);${hasNewReply ? 'box-shadow:0 0 12px rgba(255,107,107,0.3);' : ''}">
         ${hasNewReply ? '<div style="position:absolute;top:6px;right:8px;width:10px;height:10px;background:#ff6b6b;border-radius:50%;box-shadow:0 1px 3px rgba(255,107,107,0.5);z-index:1;"></div>' : ''}
-        ${unreadTaReactionCount > 0 ? `<div style="position:absolute;top:4px;right:6px;min-width:16px;height:16px;background:linear-gradient(135deg,#ff6b81,#ff4757);border-radius:8px;box-shadow:0 2px 6px rgba(255,71,87,0.6);z-index:2;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:600;padding:0 4px;">${unreadTaReactionCount}</div>` : ''}
+        ${unreadTaReactionCount > 0 ? `<div style="position:absolute;top:4px;left:6px;min-width:16px;height:16px;background:linear-gradient(135deg,#ff6b81,#ff4757);border-radius:8px;box-shadow:0 2px 6px rgba(255,71,87,0.6);z-index:2;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:600;padding:0 4px;">${unreadTaReactionCount}</div>` : ''}
         <div class="env-letter-header" style="padding:3px 12px;">
             <div class="env-letter-header-from">
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -2731,13 +2783,13 @@ window.viewEnvLetter = function(section, id) {
     const letter = letters.find(l => l.id === id);
     if (!letter) return;
     
-    // 清除新标记和未读表态
+    // 清除新标记和未读表态标记
     let needSave = false;
     if (section === 'inbox' && letter.isNew) {
         letter.isNew = false;
         needSave = true;
     }
-    // 清除未读表态标记
+    // 清除未读表态标记（打开信件即视为已读）
     if (letter.conversationHistory) {
         letter.conversationHistory.forEach(item => {
             if (item.taReactionUnread) {
@@ -2746,6 +2798,7 @@ window.viewEnvLetter = function(section, id) {
             }
         });
     }
+    // 兼容旧数据格式
     if (letter.myReplyTaReactionUnread) {
         letter.myReplyTaReactionUnread = false;
         needSave = true;
@@ -2878,20 +2931,30 @@ window.viewEnvLetter = function(section, id) {
             const history = letter.conversationHistory || [];
             let historyHtml = '';
             
+            // 找到最新的表态索引（从后往前找第一个有表态的myReply）
+            let latestReactionIndex = -1;
+            for (let i = history.length - 1; i >= 0; i--) {
+                if (history[i].type === 'myReply' && history[i].taReaction) {
+                    latestReactionIndex = i;
+                    break;
+                }
+            }
+            
             if (history.length > 0) {
                 // 有对话历史，直接渲染所有项
                 history.forEach((item, index) => {
                     const reaction = item.reaction || null;
                     const taReaction = item.taReaction || null;
-                    historyHtml += renderConversationItem(item.type, item.content, item.time, reaction, section, id, index, taReaction);
+                    const isLatest = index === latestReactionIndex;
+                    historyHtml += renderConversationItem(item.type, item.content, item.time, reaction, section, id, index, taReaction, isLatest);
                 });
             } else {
                 // 兼容旧数据：没有 conversationHistory 但有旧的 myReply/taReply 字段
                 if (letter.myReply) {
-                    historyHtml += renderConversationItem('myReply', letter.myReply, letter.myReplyTime, null, section, id, 0, letter.myReplyTaReaction || null);
+                    historyHtml += renderConversationItem('myReply', letter.myReply, letter.myReplyTime, null, section, id, 0, letter.myReplyTaReaction || null, letter.myReplyTaReaction ? true : false);
                 }
                 if (letter.taReply) {
-                    historyHtml += renderConversationItem('taReply', letter.taReply, letter.taReplyReceivedTime, letter.taReplyReaction || null, section, id, 1, null);
+                    historyHtml += renderConversationItem('taReply', letter.taReply, letter.taReplyReceivedTime, letter.taReplyReaction || null, section, id, 1, null, false);
                 }
             }
             
@@ -3242,7 +3305,7 @@ window.viewPartnerLetter = function(id) {
     const letter = letters.find(l => l.id === id);
     if (!letter) return;
     
-    // 清除新标记、新回复标记和未读表态
+    // 清除新标记、新回复标记和未读表态标记
     let needSave = false;
     if (letter.isNew) {
         letter.isNew = false;
@@ -3252,7 +3315,7 @@ window.viewPartnerLetter = function(id) {
         letter.hasNewTaReply = false;
         needSave = true;
     }
-    // 清除未读表态标记
+    // 清除未读表态标记（打开信件即视为已读）
     if (letter.conversationHistory) {
         letter.conversationHistory.forEach(item => {
             if (item.taReactionUnread) {
@@ -3261,6 +3324,7 @@ window.viewPartnerLetter = function(id) {
             }
         });
     }
+    // 兼容旧数据格式
     if (letter.myReplyTaReactionUnread) {
         letter.myReplyTaReactionUnread = false;
         needSave = true;
@@ -3365,20 +3429,30 @@ window.viewPartnerLetter = function(id) {
         const history = letter.conversationHistory || [];
         let historyHtml = '';
         
+        // 找到最新的表态索引（从后往前找第一个有表态的myReply）
+        let latestReactionIndex = -1;
+        for (let i = history.length - 1; i >= 0; i--) {
+            if (history[i].type === 'myReply' && history[i].taReaction) {
+                latestReactionIndex = i;
+                break;
+            }
+        }
+        
         if (history.length > 0) {
             // 有对话历史，直接渲染所有项
             history.forEach((item, index) => {
                 const reaction = item.reaction || null;
                 const taReaction = item.taReaction || null;
-                historyHtml += renderConversationItem(item.type, item.content, item.time, reaction, 'partner', id, index, taReaction);
+                const isLatest = index === latestReactionIndex;
+                historyHtml += renderConversationItem(item.type, item.content, item.time, reaction, 'partner', id, index, taReaction, isLatest);
             });
         } else {
             // 兼容旧数据：没有 conversationHistory 但有旧的 myReply/taReply 字段
             if (letter.myReply) {
-                historyHtml += renderConversationItem('myReply', letter.myReply, letter.myReplyTime, null, 'partner', id, 0, letter.myReplyTaReaction || null);
+                historyHtml += renderConversationItem('myReply', letter.myReply, letter.myReplyTime, null, 'partner', id, 0, letter.myReplyTaReaction || null, letter.myReplyTaReaction ? true : false);
             }
             if (letter.taReply) {
-                historyHtml += renderConversationItem('taReply', letter.taReply, letter.taReplyReceivedTime, letter.taReplyReaction || null, 'partner', id, 1, null);
+                historyHtml += renderConversationItem('taReply', letter.taReply, letter.taReplyReceivedTime, letter.taReplyReaction || null, 'partner', id, 1, null, false);
             }
         }
         
@@ -3415,32 +3489,54 @@ let currentViewingLetterSection = null;
 let currentViewingLetterId = null;
 
 // 渲染对话历史项
-function renderConversationItem(type, content, time, reaction, letterSection, letterId, itemIndex, taReaction) {
+function renderConversationItem(type, content, time, reaction, letterSection, letterId, itemIndex, taReaction, isLatestReaction = false) {
     const partnerName = (typeof settings !== 'undefined' && settings.partnerName) || '对方';
     const timeStr = time ? new Date(time).toLocaleDateString('zh-CN', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
     
     if (type === 'myReply') {
         // Ta对用户回复的表态 - 只显示结果，用户无法修改
-        const isTaLike = taReaction === 'like';
-        const isTaDislike = taReaction === 'dislike';
         const hasReaction = taReaction !== null && taReaction !== undefined;
+        const reactionDisplay = getTaReactionDisplayInfo(taReaction);
         
-        // 有表态时添加高亮效果
-        const highlightStyle = hasReaction ? 
-            (isTaLike ? 'box-shadow:0 0 0 2px rgba(255,105,180,0.5),0 2px 8px rgba(255,105,180,0.3);' : 'box-shadow:0 0 0 1px rgba(150,150,150,0.3);') : '';
-        const bgStyle = hasReaction ?
-            (isTaLike ? 'background:linear-gradient(135deg,rgba(255,105,180,0.12) 0%,rgba(100,149,237,0.08) 100%);' : 'background:rgba(150,150,150,0.08);') : 'background:rgba(100,149,237,0.08);';
+        // 根据表态类型设置样式
+        let highlightStyle = '';
+        let bgStyle = 'background:rgba(100,149,237,0.08);';
+        let borderColor = 'rgba(100,149,237,0.2)';
+        
+        if (hasReaction) {
+            if (taReaction === 'superLike') {
+                highlightStyle = `box-shadow:0 0 0 2px rgba(255,215,0,0.5),0 2px 8px rgba(255,165,0,0.3);${isLatestReaction ? 'animation:latestReactionGlow 2s ease-in-out infinite;' : ''}`;
+                bgStyle = 'background:linear-gradient(135deg,rgba(255,215,0,0.15) 0%,rgba(255,165,0,0.1) 100%);';
+                borderColor = 'rgba(255,215,0,0.5)';
+            } else if (taReaction === 'like') {
+                highlightStyle = `box-shadow:0 0 0 2px rgba(255,105,180,0.5),0 2px 8px rgba(255,105,180,0.3);${isLatestReaction ? 'animation:latestReactionGlow 2s ease-in-out infinite;' : ''}`;
+                bgStyle = 'background:linear-gradient(135deg,rgba(255,105,180,0.12) 0%,rgba(100,149,237,0.08) 100%);';
+                borderColor = 'rgba(255,105,180,0.4)';
+            } else if (taReaction === 'dislike') {
+                highlightStyle = 'box-shadow:0 0 0 1px rgba(150,150,150,0.3);';
+                bgStyle = 'background:rgba(150,150,150,0.08);';
+                borderColor = 'rgba(150,150,150,0.3)';
+            } else if (taReaction === 'surprised') {
+                highlightStyle = `box-shadow:0 0 0 2px rgba(156,39,176,0.5),0 2px 8px rgba(156,39,176,0.3);${isLatestReaction ? 'animation:latestReactionGlow 2s ease-in-out infinite;' : ''}`;
+                bgStyle = 'background:linear-gradient(135deg,rgba(156,39,176,0.12) 0%,rgba(123,31,162,0.08) 100%);';
+                borderColor = 'rgba(156,39,176,0.4)';
+            }
+        }
+        
+        // 最新表态标签（放在"我的回信"旁边）
+        const latestTag = isLatestReaction && hasReaction ? `<span style="font-size:8px;padding:1px 4px;border-radius:3px;background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;font-weight:600;margin-left:4px;">新</span>` : '';
         
         return `
-            <div style="margin:0 16px 12px;${bgStyle}border-radius:12px;border:1px solid ${hasReaction ? (isTaLike ? 'rgba(255,105,180,0.4)' : 'rgba(150,150,150,0.3)') : 'rgba(100,149,237,0.2)'};overflow:hidden;${highlightStyle}">
+            <style>@keyframes latestReactionGlow{0%,100%{box-shadow:0 0 0 2px rgba(255,105,180,0.5),0 2px 8px rgba(255,105,180,0.3);}50%{box-shadow:0 0 0 3px rgba(255,105,180,0.7),0 4px 16px rgba(255,105,180,0.5);}}</style>
+            <div style="margin:0 16px 12px;${bgStyle}border-radius:12px;border:1px solid ${borderColor};overflow:hidden;${highlightStyle}">
                 <div style="background:rgba(100,149,237,0.15);padding:6px 12px;display:flex;align-items:center;justify-content:space-between;">
                     <div style="display:flex;align-items:center;gap:6px;">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
-                        <span style="font-size:10px;font-weight:600;color:rgba(100,149,237,0.9);">我的回信</span>
+                        <span style="font-size:10px;font-weight:600;color:rgba(100,149,237,0.9);">我的回信</span>${latestTag}
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;">
                         ${timeStr ? `<span style="font-size:9px;color:rgba(100,149,237,0.6);">${timeStr}</span>` : ''}
-                        ${taReaction ? `<span style="font-size:9px;padding:1px 5px;border-radius:4px;${isTaLike ? 'background:linear-gradient(135deg,#ff6b81,#ff4757);color:#fff;' : 'background:rgba(100,100,100,0.85);color:#fff;'}">${isTaLike ? '喜欢' : '一般'}</span>` : ''}
+                        ${taReaction ? `<span style="font-size:9px;padding:1px 5px;border-radius:4px;${reactionDisplay.style}color:#fff;">${reactionDisplay.text}</span>` : ''}
                     </div>
                 </div>
                 <div style="padding:10px 12px;font-size:12px;color:var(--text-primary);line-height:1.6;white-space:pre-wrap;word-break:break-word;">${content}</div>
@@ -3521,18 +3617,28 @@ window.setConversationReaction = function(section, letterId, itemIndex, reaction
     if (conversationHistorySection) {
         let historyHtml = '';
         
+        // 找到最新的表态索引（从后往前找第一个有表态的myReply）
+        let latestReactionIndex = -1;
+        for (let i = history.length - 1; i >= 0; i--) {
+            if (history[i].type === 'myReply' && history[i].taReaction) {
+                latestReactionIndex = i;
+                break;
+            }
+        }
+        
         if (history.length > 0) {
             history.forEach((item, index) => {
                 const reaction = item.reaction || null;
                 const taReaction = item.taReaction || null;
-                historyHtml += renderConversationItem(item.type, item.content, item.time, reaction, section, letterId, index, taReaction);
+                const isLatest = index === latestReactionIndex;
+                historyHtml += renderConversationItem(item.type, item.content, item.time, reaction, section, letterId, index, taReaction, isLatest);
             });
         } else {
             if (letter.myReply) {
-                historyHtml += renderConversationItem('myReply', letter.myReply, letter.myReplyTime, null, section, letterId, 0, letter.myReplyTaReaction || null);
+                historyHtml += renderConversationItem('myReply', letter.myReply, letter.myReplyTime, null, section, letterId, 0, letter.myReplyTaReaction || null, letter.myReplyTaReaction ? true : false);
             }
             if (letter.taReply) {
-                historyHtml += renderConversationItem('taReply', letter.taReply, letter.taReplyReceivedTime, letter.taReplyReaction || null, section, letterId, 1, null);
+                historyHtml += renderConversationItem('taReply', letter.taReply, letter.taReplyReceivedTime, letter.taReplyReaction || null, section, letterId, 1, null, false);
             }
         }
         

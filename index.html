@@ -309,9 +309,12 @@
         <div id="reply-preview-container"></div>
         <div id="collapsed-extras-panel" style="display:none;">
             <div class="collapsed-extras-inner" style="padding:12px; background:var(--secondary-bg); border-top:1px solid var(--border-color);">
-                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;">
-                    <button class="collapsed-extra-btn" id="attachment-btn-extra" title="发送图片" onclick="document.getElementById('image-input').click()">
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
+                    <button class="collapsed-extra-btn" id="attachment-btn-extra" title="发送图片" onclick="(function(){document.getElementById('collapsed-extras-panel').style.display='none';document.getElementById('collapse-expand-btn').classList.remove('open');document.getElementById('image-input').click();})();">
                         <i class="fas fa-image"></i>
+                    </button>
+                    <button class="collapsed-extra-btn" id="continue-btn-extra" title="让对方继续说">
+                        <i class="fas fa-ellipsis-h"></i>
                     </button>
                     <button class="collapsed-extra-btn" id="combo-btn-extra" title="表情拍一拍">
                         <i class="fas fa-laugh-beam"></i>
@@ -325,17 +328,14 @@
                     <button class="collapsed-extra-btn" id="collapsed-call-btn" title="视频通话" onclick="(function(){document.getElementById('collapsed-extras-panel').style.display='none';document.getElementById('collapse-expand-btn').classList.remove('open');if(window.callFeature&&typeof window.callFeature.startCall==='function')window.callFeature.startCall(false);})();">
                         <i class="fas fa-video"></i>
                     </button>
-                    <button class="collapsed-extra-btn" title="退出收纳" onclick="window.exitCollapseMode && window.exitCollapseMode()" style="color:#ff5050; background:rgba(255,80,80,0.1);">
-                        <i class="fas fa-times"></i>
-                    </button>
                 </div>
             </div>
         </div>
         <div class="input-area">
-    <button id="collapse-expand-btn" title="展开更多" style="display:none;width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;background:rgba(var(--accent-color-rgb),0.12);color:var(--accent-color);font-size:14px;transition:all 0.25s;flex-shrink:0;align-items:center;justify-content:center;" onclick="window.toggleCollapsedExtras && window.toggleCollapsedExtras()"><i class="fas fa-chevron-up"></i></button>
-    <button class="attachment-btn input-btn collapse-hideable" id="attachment-btn" title="发送图片"><i class="fas fa-image"></i></button>
+    <button id="collapse-expand-btn" title="展开更多" style="width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;background:rgba(var(--accent-color-rgb),0.12);color:var(--accent-color);font-size:14px;transition:all 0.25s;flex-shrink:0;align-items:center;justify-content:center;" onclick="window.toggleCollapsedExtras && window.toggleCollapsedExtras()"><i class="fas fa-chevron-up"></i></button>
+    <button class="attachment-btn input-btn collapse-hideable" id="attachment-btn" title="发送图片" style="display:none;"><i class="fas fa-image"></i></button>
     
-    <button class="continue-btn input-btn collapse-hideable" id="continue-btn" title="让对方继续说"><i class="fas fa-ellipsis-h"></i></button>
+    <button class="continue-btn input-btn collapse-hideable" id="continue-btn" title="让对方继续说" style="display:none;"><i class="fas fa-ellipsis-h"></i></button>
 
     <textarea class="message-input" id="message-input" placeholder="" rows="1"></textarea>
     
