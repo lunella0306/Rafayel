@@ -1307,6 +1307,29 @@ autoSendSlider.addEventListener('change', () => {
             showModal(document.getElementById('envelope-modal'));
         });
     }
+    
+    // 小红书解析入口
+    const xhsParserEntry = document.getElementById('xhs-parser-function');
+    if (xhsParserEntry) {
+        xhsParserEntry.addEventListener('click', () => {
+            hideModal(DOMElements.advancedModal.modal);
+            // 重置状态
+            document.getElementById('xhs-url-input').value = '';
+            document.getElementById('xhs-result-container').style.display = 'none';
+            document.getElementById('xhs-loading').style.display = 'none';
+            document.getElementById('xhs-error').style.display = 'none';
+            showModal(document.getElementById('xhs-parser-modal'));
+        });
+    }
+    
+    // 小红书解析关闭按钮
+    const closeXhsParser = document.getElementById('close-xhs-parser');
+    if (closeXhsParser) {
+        closeXhsParser.addEventListener('click', () => {
+            hideModal(document.getElementById('xhs-parser-modal'));
+        });
+    }
+    
     const galleryBanner = document.getElementById('gallery-banner-entry');
     if (galleryBanner) {
         galleryBanner.addEventListener('click', () => {
@@ -3607,18 +3630,42 @@ window.toggleCollapsedExtras = function() {
     panel.style.display = willOpen ? 'block' : 'none';
     if (btn) btn.classList.toggle('open', willOpen);
 
+    // 点击空白处关闭面板
+    if (willOpen && !panel._outsideClickBound) {
+        panel._outsideClickBound = true;
+        const closeOnOutsideClick = (e) => {
+            // 如果面板已隐藏，不处理
+            if (panel.style.display === 'none') return;
+            // 如果点击的是面板内部或展开按钮，不关闭
+            if (panel.contains(e.target) || (btn && btn.contains(e.target))) return;
+            // 点击空白处，关闭面板
+            panel.style.display = 'none';
+            if (btn) btn.classList.remove('open');
+        };
+        // 同时支持 click 和 touchend 事件（安卓手机兼容）
+        document.addEventListener('click', closeOnOutsideClick);
+        document.addEventListener('touchend', closeOnOutsideClick, { passive: true });
+    }
+
     function wireExtra(extraId, primaryId) {
         const extra = document.getElementById(extraId);
         const primary = document.getElementById(primaryId);
         if (extra && primary && !extra._linked) {
             extra._linked = true;
-            extra.addEventListener('click', (e) => { 
+            const handleAction = (e) => { 
                 e.stopPropagation(); 
                 // 收起面板
                 panel.style.display = 'none';
                 btn.classList.remove('open');
                 primary.click(); 
-            });
+            };
+            // click 事件
+            extra.addEventListener('click', handleAction);
+            // touchend 事件支持安卓手机
+            extra.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleAction(e);
+            }, { passive: false });
         }
     }
     wireExtra('combo-btn-extra', 'combo-btn');

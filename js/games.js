@@ -1261,8 +1261,8 @@ function initComboMenu() {
 
         if (tabId === 'my-sticker') {
             renderMyStickerLibrary();
-        } else if (tabId === 'partner-sticker') {
-            renderPartnerStickerLibrary();
+        } else if (tabId === 'share') {
+            renderShareLinkPanel();
         } else {
             renderUserPokeMenu();
         }
@@ -1302,8 +1302,8 @@ function initComboMenu() {
         grid.className = 'sticker-grid-view';
         myStickerLibrary.forEach((src, idx) => {
             const item = makeDeletableStickerItem(src, () => {
-                addMessage({ id: Date.now(), sender: 'user', text: '', timestamp: new Date(), image: src, status: 'sent', type: 'normal' });
-                playSound('send');
+                if (typeof window.addMessage === 'function') window.addMessage({ id: Date.now(), sender: 'user', text: '', timestamp: new Date(), image: src, status: 'sent', type: 'normal' });
+                if (typeof playSound === 'function') playSound('send');
                 picker.classList.remove('active');
                 const delayRange = settings.replyDelayMax - settings.replyDelayMin;
                 setTimeout(simulateReply, settings.replyDelayMin + Math.random() * delayRange);
@@ -1318,31 +1318,145 @@ function initComboMenu() {
         contentArea.appendChild(grid);
     }
 
-    function renderPartnerStickerLibrary() {
+    function renderShareLinkPanel() {
         contentArea.innerHTML = '';
-        if (!stickerLibrary || stickerLibrary.length === 0) {
-            contentArea.innerHTML = `
-                <div class="empty-sticker-tip">
-                    <i class="far fa-images"></i>
-                    对方表情库还是空的哦<br>
-                    请去"高级功能"->"自定义回复"->"表情库"中添加图片~
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'padding:12px;font-family:var(--font-family);';
+        
+        // 输入区域
+        const inputRow = document.createElement('div');
+        inputRow.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = '粘贴链接，如 B站/抖音/微博/YouTube...';
+        input.style.cssText = `
+            flex:1;padding:10px 12px;border:1px solid var(--border-color);
+            border-radius:10px;background:var(--secondary-bg);color:var(--text-primary);
+            font-size:13px;outline:none;font-family:var(--font-family);
+        `;
+        
+        const sendBtn = document.createElement('button');
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        sendBtn.title = '解析并发送';
+        sendBtn.style.cssText = `
+            padding:10px 14px;border:none;border-radius:10px;cursor:pointer;
+            background:linear-gradient(135deg, var(--accent-color), rgba(var(--accent-color-rgb),0.8));
+            color:#fff;font-size:14px;
+        `;
+        
+        inputRow.appendChild(input);
+        inputRow.appendChild(sendBtn);
+        wrapper.appendChild(inputRow);
+        
+        // 预览区域
+        const previewArea = document.createElement('div');
+        previewArea.id = 'link-preview-area';
+        previewArea.style.cssText = 'display:none;';
+        wrapper.appendChild(previewArea);
+        
+        // 使用提示
+        const tip = document.createElement('div');
+        tip.style.cssText = 'font-size:11px;color:var(--text-secondary);opacity:0.7;line-height:1.6;';
+        tip.innerHTML = `
+            <i class="fas fa-info-circle" style="margin-right:4px;"></i>
+            支持解析：B站视频/专栏、抖音视频、微博、YouTube、Twitter/X、小红书等<br>
+            发送后会显示链接卡片，对方可以看到预览
+        `;
+        wrapper.appendChild(tip);
+        
+        // 解析链接
+        async function parseAndSendLink(url) {
+            const cleanUrl = url.trim();
+            if (!cleanUrl) {
+                if (typeof showNotification === 'function') showNotification('请输入链接', 'warning', 1500);
+                return;
+            }
+            
+            // 简单的URL验证
+            try {
+                new URL(cleanUrl);
+            } catch {
+                if (typeof showNotification === 'function') showNotification('请输入有效的链接', 'warning', 1500);
+                return;
+            }
+            
+            // 显示加载状态
+            previewArea.style.display = 'block';
+            previewArea.innerHTML = `
+                <div style="display:flex;align-items:center;justify-content:center;padding:20px;color:var(--text-secondary);">
+                    <i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i> 正在解析链接...
                 </div>
             `;
-            return;
-        }
-        const grid = document.createElement('div');
-        grid.className = 'sticker-grid-view';
-        stickerLibrary.forEach(src => {
-            const item = makeStickerItem(src, () => {
-                addMessage({ id: Date.now(), sender: 'user', text: '', timestamp: new Date(), image: src, status: 'sent', type: 'normal' });
-                playSound('send');
-                picker.classList.remove('active');
+            
+            // 提取域名用于显示
+            let domain = '';
+            let siteName = '';
+            try {
+                const urlObj = new URL(cleanUrl);
+                domain = urlObj.hostname;
+                // 识别常见平台
+                if (domain.includes('bilibili.com')) siteName = '哔哩哔哩';
+                else if (domain.includes('douyin.com')) siteName = '抖音';
+                else if (domain.includes('weibo.com')) siteName = '微博';
+                else if (domain.includes('youtube.com') || domain.includes('youtu.be')) siteName = 'YouTube';
+                else if (domain.includes('twitter.com') || domain.includes('x.com')) siteName = 'X';
+                else if (domain.includes('xiaohongshu.com')) siteName = '小红书';
+                else siteName = domain.replace('www.', '');
+            } catch {
+                domain = cleanUrl;
+                siteName = '链接';
+            }
+            
+            // 发送链接卡片消息
+            const linkCard = {
+                id: Date.now(),
+                sender: 'user',
+                text: '',
+                timestamp: new Date(),
+                status: 'sent',
+                type: 'link',
+                linkData: {
+                    url: cleanUrl,
+                    domain: domain,
+                    siteName: siteName,
+                    title: '',
+                    description: '',
+                    image: ''
+                }
+            };
+            
+            if (typeof window.addMessage === 'function') {
+                window.addMessage(linkCard);
+            }
+            if (typeof playSound === 'function') playSound('send');
+            picker.classList.remove('active');
+            
+            // 触发回复
+            if (typeof settings !== 'undefined' && typeof simulateReply === 'function') {
                 const delayRange = settings.replyDelayMax - settings.replyDelayMin;
                 setTimeout(simulateReply, settings.replyDelayMin + Math.random() * delayRange);
-            });
-            grid.appendChild(item);
+            }
+            
+            if (typeof showNotification === 'function') showNotification('已发送链接卡片', 'success', 1500);
+        }
+        
+        sendBtn.onclick = () => parseAndSendLink(input.value);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') parseAndSendLink(input.value);
         });
-        contentArea.appendChild(grid);
+        
+        // 粘贴自动解析
+        input.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                const val = input.value.trim();
+                if (val && (val.startsWith('http://') || val.startsWith('https://'))) {
+                    parseAndSendLink(val);
+                }
+            }, 100);
+        });
+        
+        contentArea.appendChild(wrapper);
     }
 
     function renderStickerLibrary() { renderMyStickerLibrary(); }
@@ -1427,12 +1541,14 @@ function initComboMenu() {
                     : actionText;
                 
                 // 发送拍一拍消息
-                addMessage({
-                    id: Date.now(),
-                    text: _formatPokeText(`${settings.myName} ${cleanText}`),
-                    timestamp: new Date(),
-                    type: 'system', subtype: 'poke', favorited: false, note: null
-                });
+                if (typeof window.addMessage === 'function') {
+                    window.addMessage({
+                        id: Date.now(),
+                        text: _formatPokeText(`${settings.myName} ${cleanText}`),
+                        timestamp: new Date(),
+                        type: 'system', subtype: 'poke', favorited: false, note: null
+                    });
+                }
                 
                 // 存入自定义库（如果不存在）
                 const normalized = cleanText.trim().toLowerCase();
@@ -1669,12 +1785,14 @@ function initComboMenu() {
             `;
             sendBtn.onclick = (e) => {
                 e.stopPropagation();
-                addMessage({
-                    id: Date.now(),
-                    text: _formatPokeText(`${settings.myName} ${cleanPokeText}`),
-                    timestamp: new Date(),
-                    type: 'system', subtype: 'poke', favorited: false, note: null
-                });
+                if (typeof window.addMessage === 'function') {
+                    window.addMessage({
+                        id: Date.now(),
+                        text: _formatPokeText(`${settings.myName} ${cleanPokeText}`),
+                        timestamp: new Date(),
+                        type: 'system', subtype: 'poke', favorited: false, note: null
+                    });
+                }
                 picker.classList.remove('active');
                 if (typeof playSound === 'function') playSound('poke');
                 const delayRange = settings.replyDelayMax - settings.replyDelayMin;
@@ -2105,3 +2223,126 @@ function initComboMenu() {
     };
 
 })();
+
+// ========== 小红书解析功能 ==========
+// 配置：请将此地址改为你的 Vercel 部署地址
+const XHS_API_BASE = 'https://你的vercel地址.vercel.app';
+
+/**
+ * 解析小红书笔记
+ */
+async function parseXiaohongshu() {
+    const urlInput = document.getElementById('xhs-url-input');
+    const resultContainer = document.getElementById('xhs-result-container');
+    const loading = document.getElementById('xhs-loading');
+    const errorDiv = document.getElementById('xhs-error');
+    const parseBtn = document.getElementById('xhs-parse-btn');
+    
+    const url = urlInput.value.trim();
+    
+    if (!url) {
+        showNotification('请输入小红书链接', 'error');
+        return;
+    }
+    
+    // 检查链接格式
+    if (!url.includes('xiaohongshu.com') && !url.includes('xhslink.com')) {
+        showNotification('请输入正确的小红书链接', 'error');
+        return;
+    }
+    
+    // 显示加载状态
+    loading.style.display = 'block';
+    resultContainer.style.display = 'none';
+    errorDiv.style.display = 'none';
+    parseBtn.disabled = true;
+    
+    try {
+        const apiUrl = `${XHS_API_BASE}/api/xhs?url=${encodeURIComponent(url)}`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        loading.style.display = 'none';
+        parseBtn.disabled = false;
+        
+        if (data.success) {
+            displayXhsResult(data.data);
+            resultContainer.style.display = 'block';
+            showNotification('解析成功！', 'success');
+        } else {
+            errorDiv.textContent = data.error || '解析失败，请稍后重试';
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('解析错误:', error);
+        loading.style.display = 'none';
+        parseBtn.disabled = false;
+        errorDiv.textContent = '网络错误，请检查 API 地址是否正确';
+        errorDiv.style.display = 'block';
+    }
+}
+
+/**
+ * 显示解析结果
+ */
+function displayXhsResult(data) {
+    // 作者头像
+    const avatarImg = document.getElementById('xhs-author-avatar');
+    if (data.author?.avatar) {
+        avatarImg.src = data.author.avatar;
+        avatarImg.style.display = 'block';
+    } else {
+        avatarImg.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23ff2442"/><text x="50" y="55" text-anchor="middle" fill="white" font-size="30">红</text></svg>';
+    }
+    
+    // 作者名字
+    document.getElementById('xhs-author-name').textContent = data.author?.name || '未知作者';
+    
+    // 笔记内容
+    const contentDiv = document.getElementById('xhs-note-content');
+    const content = data.title ? `${data.title}\n\n${data.description || ''}` : (data.description || '暂无内容');
+    contentDiv.textContent = content;
+    
+    // 图片
+    const imagesContainer = document.getElementById('xhs-images-container');
+    imagesContainer.innerHTML = '';
+    
+    if (data.images && data.images.length > 0) {
+        data.images.forEach((img, index) => {
+            const imgEl = document.createElement('img');
+            imgEl.src = img.url || img;
+            imgEl.alt = `图片 ${index + 1}`;
+            imgEl.loading = 'lazy';
+            imgEl.onclick = () => {
+                // 点击图片放大预览
+                window.open(img.url || img, '_blank');
+            };
+            imgEl.onerror = () => {
+                imgEl.style.display = 'none';
+            };
+            imagesContainer.appendChild(imgEl);
+        });
+    } else {
+        imagesContainer.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);font-size:12px;padding:20px;">暂无图片</div>';
+    }
+    
+    // 统计数据
+    document.getElementById('xhs-likes').textContent = formatNumber(data.likes || 0);
+    document.getElementById('xhs-collects').textContent = formatNumber(data.collects || 0);
+    document.getElementById('xhs-comments').textContent = formatNumber(data.comments || 0);
+}
+
+/**
+ * 格式化数字
+ */
+function formatNumber(num) {
+    if (num >= 10000) {
+        return (num / 10000).toFixed(1) + 'w';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'k';
+    }
+    return num.toString();
+}
+
+// 暴露到全局
+window.parseXiaohongshu = parseXiaohongshu;

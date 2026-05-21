@@ -882,7 +882,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
             if (e.target.id !== 'call-enabled-toggle') return;
             S.enabled = e.target.checked;
             localStorage.setItem(KEY_ENABLED, S.enabled);
-            const btn = document.getElementById('call-toolbar-btn');
+            const btn = document.getElementById('schedule-toolbar-btn');
             if (btn) btn.style.display = S.enabled ? '' : 'none';
             const collapsedCallBtn = document.getElementById('collapsed-call-btn');
             if (collapsedCallBtn) collapsedCallBtn.style.display = S.enabled ? '' : 'none';

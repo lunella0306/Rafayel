@@ -442,6 +442,7 @@ const tourSteps = [
 ];
 
 function startTour() {
+    if (!tourOverlay) return; // 元素不存在则直接返回
     isTourActive = true;
     tourOverlay.style.display = 'block';
     setTimeout(() => tourOverlay.classList.add('active'), 10);
@@ -451,14 +452,18 @@ function startTour() {
 
 function endTour() {
     isTourActive = false;
-    tourOverlay.classList.remove('active');
-    tourPopover.classList.remove('visible');
-    setTimeout(() => {
-        tourOverlay.style.display = 'none';
-        tourHighlightBox.style.width = '0px';
-        tourHighlightBox.style.height = '0px';
-        tourHighlightBox.style.opacity = '0';
-    }, 300);
+    if (tourOverlay) {
+        tourOverlay.classList.remove('active');
+        if (tourPopover) tourPopover.classList.remove('visible');
+        setTimeout(() => {
+            if (tourOverlay) tourOverlay.style.display = 'none';
+            if (tourHighlightBox) {
+                tourHighlightBox.style.width = '0px';
+                tourHighlightBox.style.height = '0px';
+                tourHighlightBox.style.opacity = '0';
+            }
+        }, 300);
+    }
     localforage.setItem(APP_PREFIX + 'tour_seen', 'true');
     document.querySelectorAll('.modal').forEach(m => hideModal(m));
     setTimeout(function() {
@@ -473,6 +478,7 @@ function showTourStep(index) {
         endTour();
         return;
     }
+    if (!tourPopover || !tourTitle || !tourContent || !tourStepCounter || !tourPrevBtn || !tourNextBtn) return;
     const step = tourSteps[index];
     if (step.onBefore) {
         step.onBefore();
@@ -489,7 +495,7 @@ function showTourStep(index) {
             tourNextBtn.innerHTML = '下一步 <i class="fas fa-arrow-right"></i>';
         }
         const targetElement = step.element ? document.querySelector(step.element) : null;
-        if (targetElement) {
+        if (targetElement && tourHighlightBox) {
             const rect = targetElement.getBoundingClientRect();
             tourHighlightBox.style.width = `${rect.width + 10}px`;
             tourHighlightBox.style.height = `${rect.height + 10}px`;
@@ -497,7 +503,7 @@ function showTourStep(index) {
             tourHighlightBox.style.left = `${rect.left - 5}px`;
             tourHighlightBox.style.opacity = '1';
             positionPopover(rect, step.position);
-        } else {
+        } else if (tourHighlightBox) {
             tourHighlightBox.style.opacity = '0';
             tourHighlightBox.style.width = '0px';
             tourHighlightBox.style.height = '0px';
@@ -510,6 +516,7 @@ function showTourStep(index) {
 }
 
 function positionPopover(rect, position) {
+    if (!tourPopover) return;
     const popoverRect = tourPopover.getBoundingClientRect();
     const spacing = 15;
     let top, left;
@@ -883,9 +890,10 @@ function prevTourStep() {
 }
 
 function setupTutorialListeners() {
-    tourNextBtn.addEventListener('click', nextTourStep);
-    tourPrevBtn.addEventListener('click', prevTourStep);
-    tourSkipBtn.addEventListener('click', endTour);
+    // 检查元素是否存在（可能已被删除）
+    if (tourNextBtn) tourNextBtn.addEventListener('click', nextTourStep);
+    if (tourPrevBtn) tourPrevBtn.addEventListener('click', prevTourStep);
+    if (tourSkipBtn) tourSkipBtn.addEventListener('click', endTour);
 
     const replayBtn = document.getElementById('replay-tutorial-btn');
     if(replayBtn) {

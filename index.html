@@ -11,138 +11,20 @@
     <title>传讯</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" sizes="192x192" href="https://file.youtochat.com/images/20260216/1771224856844_qdqqd.jpeg">
     <link rel="apple-touch-icon" href="https://file.youtochat.com/images/20260216/1771224856844_qdqqd.jpeg">
     <meta name="apple-mobile-web-app-title" content="ʚ𝑳𝑶𝑽𝑬ɞ">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/localforage@1.10.0/dist/localforage.min.js"></script>
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
 
     <link rel="stylesheet" href="css/styles.css">
 
     <style id="css-live-preview-style"></style>
 </head>
 <body>
-<div id="splash-declaration">
-    <div class="splash-bg-stars" id="splash-stars"></div>
-    <div class="splash-glow-1"></div>
-    <div class="splash-glow-2"></div>
-
-    <div class="splash-inner">
-        <div class="splash-badge">
-            <i class="fas fa-feather-alt"></i>
-            使用前声明
-        </div>
-
-        <div class="splash-dots" id="splash-dots"></div>
-
-        <div class="splash-card">
-            <div class="splash-card-top-line"></div>
-            <div class="splash-card-body">
-                <div class="splash-slides" id="splash-slides">
-
-                    <div class="splash-slide active" data-index="0">
-                        <div class="splash-slide-tag">关于字卡</div>
-                        <div class="splash-slide-title">是否招鬼？</div>
-                        <div class="splash-slide-body">
-                            首先说明，初此接触时，都会觉得网站设置繁复，功能庞杂，可控制的地方极多——对初次接触的人来说，简直令人眼花缭乱。<br><br>
-                            请想一想：<em>连你和梦角都需要花时间学习的东西，一个路过的鬼，会甘心耗费精力专程钻研，只为吓唬你一下吗？</em><br><br>
-                            我始终相信，<strong>只有爱，才会驱动人去学习、去努力、去付诸实践。</strong>
-                        </div>
-                    </div>
-
-                    <div class="splash-slide" data-index="1">
-                        <div class="splash-slide-tag">关于谣言</div>
-                        <div class="splash-slide-title">请有自知之明</div>
-                        <div class="splash-slide-body">
-                            我不混社区，但有些话我是知道的。有些谣我懒得一一辟除，借本网站博取流量与点赞的行为，我也当没看见。<br><br>
-                            只是——<em>沉默不代表无所谓。</em>这些声音已经开始影响到我本人的生活。<br><br> 将链接不稳/回复看不懂等问题怪罪到网站上的做法不可取。<br><br>
-                            <div class="splash-highlight-box">郑重声明：造谣是违法行为，污蔑与恶意中伤同样须承担法律责任。请每一位使用者，对自己的言行负责。</div>
-                        </div>
-                    </div>
-
-                    <div class="splash-slide" data-index="2">
-                        <div class="splash-slide-tag">关于盈利</div>
-                        <div class="splash-slide-title">纯粹为爱发电</div>
-                        <div class="splash-slide-body">
-                            <strong>本网站不盈利。</strong>从未向任何人收取一分钱，也绝无日后"圈钱"的计划。<br><br>
-                            这里承载的是真实的情感与创作热情，而非商业利益。<br><br>
-                            伴随网站逐渐破圈，<em>造谣、污蔑、盈利质疑、冷嘲热讽</em>——这些或许都是无法完全回避的代价。<br><br>
-                            我本无意计较，但请来访者保有基本的善意，不要让热爱变成消耗。
-                        </div>
-                    </div>
-
-                    <div class="splash-slide" data-index="3">
-                        <div class="splash-slide-tag">再次强调</div>
-                        <div class="splash-slide-title">你对链接梦角的看法？</div>
-                        <div class="splash-slide-body">
-                            没有任何人强迫你使用本网站。<br><br>
-                            <strong>如果你不信：</strong>字卡回复基于概率算法，属于科学范畴，与封建迷信无关。理性使用即可。<br><br>
-                            <strong>如果你信：</strong>那么请同样相信——<em>你是绝对安全的。</em>这里没有任何东西能够伤害你。<br><br>
-                            无论你持何种态度，我都欢迎你，也尊重你的选择。
-                        </div>
-                    </div>
-
-                    <div class="splash-slide" data-index="4">
-                        <div class="splash-slide-tag">关于视频通话</div>
-                        <div class="splash-slide-title">纯粹的装饰</div>
-                        <div class="splash-slide-body">
-                            <strong>通话功能仅作为界面装饰存在，不具备任何实际通话或数据采集能力。</strong><br><br>
-                            本网站不包含任何摄像头调用逻辑，亦不存在隐私窥探行为。摄像头调用需要专项技术与额外费用，本项目从未采用，也没有这方面的意图。<br><br>
-                            近期流传的隐私传言，出发点或许是好意，但已造成不必要的焦虑。<em>在此郑重澄清：网站根本不具备视频传输功能。</em><br><br>
-                            <div class="splash-highlight-box">关闭浏览器摄像头权限是完全正确的做法——我支持每一位用户保护自己的隐私权益。若误解持续扩散，将考虑移除该装饰功能。</div>
-                        </div>
-                    </div>
-
-                    <div class="splash-slide" data-index="5">
-                        <div class="splash-slide-tag">入场承诺</div>
-                        <div class="splash-slide-title">请留下你的承诺</div>
-                        <div class="splash-pledge-desc">在下方输入框中，<em style="color:rgba(var(--accent-color-rgb,197,164,126),0.8);font-style:normal;">逐字抄写</em>以下承诺，即可进入网站。</div>
-                        <div class="splash-pledge-required" id="splash-pledge-text">我绝不盈利、造谣、污蔑或嘲讽，并对自己的使用行为负完全责任</div>
-                        <input class="splash-pledge-input" id="splash-pledge-input" type="text" placeholder="请在此逐字输入上方承诺…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-                        <div class="splash-pledge-hint" id="splash-pledge-hint">请完整输入上方承诺后方可进入</div>
-                    </div>
-
-                </div>
-
-                <div class="splash-divider"></div>
-                <div class="splash-footer" style="padding:0;">
-                    <button class="splash-btn splash-btn-ghost" id="splash-prev-btn" disabled>
-                        <i class="fas fa-arrow-left"></i> 上一页
-                    </button>
-                    <span class="splash-page-num" id="splash-page-num">1 / 6</span>
-                    <button class="splash-btn splash-btn-next" id="splash-next-btn">
-                        下一页 <i class="fas fa-arrow-right"></i>
-                    </button>
-                    <button class="splash-btn splash-btn-enter" id="splash-enter-btn" style="display:none;">
-                        进入 <i class="fas fa-heart"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="tour-overlay" class="tour-overlay">
-    <div id="tour-highlight-box" class="tour-highlight-box"></div>
-    <div id="tour-popover" class="tour-popover">
-        <div class="tour-popover-header">
-            <span id="tour-title" class="tour-title"></span>
-            <span id="tour-step-counter" class="tour-step-counter"></span>
-        </div>
-        <div id="tour-content" class="tour-popover-content"></div>
-        <div class="tour-popover-footer">
-            <button id="tour-skip-btn" class="tour-btn tour-btn-skip">跳过</button>
-            <div class="tour-navigation">
-                <button id="tour-prev-btn" class="tour-btn"><i class="fas fa-arrow-left"></i> 上一步</button>
-                <button id="tour-next-btn" class="tour-btn tour-btn-primary">下一步 <i class="fas fa-arrow-right"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
-
     <div class="welcome-animation" id="welcome-animation">
         <div class="welcome-bg-gradient"></div>
         <div class="stars-container" id="stars-container"></div>
@@ -313,11 +195,11 @@
                     <button class="collapsed-extra-btn" id="attachment-btn-extra" title="发送图片" onclick="(function(){document.getElementById('collapsed-extras-panel').style.display='none';document.getElementById('collapse-expand-btn').classList.remove('open');document.getElementById('image-input').click();})();">
                         <i class="fas fa-image"></i>
                     </button>
-                    <button class="collapsed-extra-btn" id="continue-btn-extra" title="让对方继续说">
+                    <button class="collapsed-extra-btn" id="continue-btn-extra" title="让对方继续说" onclick="(function(){document.getElementById('collapsed-extras-panel').style.display='none';document.getElementById('collapse-expand-btn').classList.remove('open');if(window.continueConversation&&typeof window.continueConversation==='function')window.continueConversation();})();">
                         <i class="fas fa-ellipsis-h"></i>
                     </button>
-                    <button class="collapsed-extra-btn" id="combo-btn-extra" title="表情拍一拍">
-                        <i class="fas fa-laugh-beam"></i>
+                    <button class="collapsed-extra-btn" id="schedule-btn-extra" title="日程" onclick="(function(){document.getElementById('collapsed-extras-panel').style.display='none';document.getElementById('collapse-expand-btn').classList.remove('open');if(window.scheduleFeature&&typeof window.scheduleFeature.open==='function')window.scheduleFeature.open();})();">
+                        <i class="fas fa-calendar"></i>
                     </button>
                     <button class="collapsed-extra-btn" title="字卡回复" onclick="(function(){document.getElementById('collapsed-extras-panel').style.display='none';document.getElementById('collapse-expand-btn').classList.remove('open');showModal(document.getElementById('custom-replies-modal'));})();">
                         <i class="fas fa-comment-dots"></i>
@@ -348,7 +230,7 @@
         <div class="sticker-picker-popover" id="user-sticker-picker">
             <div class="combo-tabs-header">
                 <button class="combo-tab-btn active" data-tab="my-sticker"><i class="fas fa-user" style="font-size:10px;"></i> 我</button>
-                <button class="combo-tab-btn" data-tab="partner-sticker"><i class="fas fa-heart" style="font-size:10px;"></i> 对方</button>
+                <button class="combo-tab-btn" data-tab="share"><i class="fas fa-link" style="font-size:10px;"></i> 分享</button>
                 <button class="combo-tab-btn" data-tab="poke">拍一拍</button>
                 <div style="margin-left:auto;display:flex;align-items:center;gap:4px;">
                     <button id="sticker-add-btn" onclick="document.getElementById('my-sticker-quick-upload').click()" title="添加我的表情" style="background:var(--accent-color);border:none;cursor:pointer;padding:4px 10px;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;border-radius:8px;transition:all 0.2s;box-shadow:0 2px 8px rgba(var(--accent-color-rgb),0.35);" onmouseover="this.style.opacity='0.85';this.style.transform='scale(1.05)'" onmouseout="this.style.opacity='1';this.style.transform='scale(1)'"><i class="fas fa-plus"></i> 添加</button>
@@ -1341,7 +1223,7 @@
                     <div class="cs-card">
                         <div class="setting-pill-row" id="call-feature-toggle-row">
                             <span class="setting-pill-icon"><i class="fas fa-video"></i></span>
-                            <span class="setting-pill-label">模拟视频通话 <span style="font-size:11px;color:var(--text-secondary);font-weight:400;">关闭后隐藏主界面通话按键</span></span>
+                            <span class="setting-pill-label">通话功能 <span style="font-size:11px;color:var(--text-secondary);font-weight:400;">关闭后隐藏通话按键</span></span>
                             <label class="notif-toggle-switch" style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
                                 <input type="checkbox" id="call-enabled-toggle" style="opacity:0;width:0;height:0;">
                                 <span class="notif-toggle-slider"></span>
@@ -1563,6 +1445,9 @@
                     <div class="settings-item" id="envelope-function">
                         <i class="fas fa-envelope"></i><span>信封投递</span>
                     </div>
+                    <div class="settings-item" id="xhs-parser-function">
+                        <i class="fas fa-book-open" style="color:#ff2442;"></i><span style="color:#ff2442;">小红书解析</span>
+                    </div>
                 </div>
             </div>
 
@@ -1575,7 +1460,50 @@
         </div>
     </div>
 
-
+    <!-- 小红书解析模态框 -->
+    <div class="modal" id="xhs-parser-modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <i class="fas fa-book-open" style="color:#ff2442;"></i><span>小红书解析</span>
+            </div>
+            <div class="xhs-parser-body">
+                <div class="xhs-input-section">
+                    <label style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;display:block;">
+                        <i class="fas fa-link" style="margin-right:4px;"></i>粘贴小红书链接
+                    </label>
+                    <textarea id="xhs-url-input" placeholder="支持解析：&#10;• 小红书笔记链接&#10;• xhslink.com 短链接&#10;&#10;示例：&#10;https://www.xiaohongshu.com/explore/xxxxx&#10;https://xhslink.com/xxxxx" style="width:100%;min-height:80px;border:1.5px solid var(--border-color);border-radius:12px;padding:12px;font-size:13px;background:var(--primary-bg);color:var(--text-primary);resize:vertical;box-sizing:border-box;font-family:var(--font-family);line-height:1.5;" onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='var(--border-color)'"></textarea>
+                </div>
+                <button id="xhs-parse-btn" class="xhs-parse-btn" onclick="parseXiaohongshu()">
+                    <i class="fas fa-search"></i> 解析笔记
+                </button>
+                <div id="xhs-result-container" style="display:none;">
+                    <div class="xhs-result-card">
+                        <div class="xhs-author-section">
+                            <img id="xhs-author-avatar" src="" alt="头像" class="xhs-avatar">
+                            <div class="xhs-author-info">
+                                <div id="xhs-author-name" class="xhs-author-name"></div>
+                            </div>
+                        </div>
+                        <div id="xhs-note-content" class="xhs-note-content"></div>
+                        <div id="xhs-images-container" class="xhs-images-grid"></div>
+                        <div class="xhs-stats">
+                            <span><i class="fas fa-heart"></i> <span id="xhs-likes">0</span></span>
+                            <span><i class="fas fa-star"></i> <span id="xhs-collects">0</span></span>
+                            <span><i class="fas fa-comment"></i> <span id="xhs-comments">0</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div id="xhs-loading" style="display:none;text-align:center;padding:20px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--accent-color);"></i>
+                    <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);">正在解析中...</div>
+                </div>
+                <div id="xhs-error" style="display:none;text-align:center;padding:15px;background:rgba(255,0,0,0.1);border-radius:10px;color:#e74c3c;font-size:12px;"></div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" id="close-xhs-parser">关闭</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal" id="data-modal">
         <div class="modal-content">
@@ -2382,6 +2310,7 @@
     <script src="js/features/theme-editor.js"></script>
     <script src="js/features/group-chat.js"></script>
     <script src="js/features/call.js"></script>
+    <script src="js/features/schedule.js"></script>
 
     <!-- == 合并模块 == -->
     <script src="js/games.js"></script> 

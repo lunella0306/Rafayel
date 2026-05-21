@@ -1021,6 +1021,51 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
         return fragment;
     }
 
+    // 链接卡片消息
+    if (msg.type === 'link' && msg.linkData) {
+        const linkDiv = document.createElement('div');
+        linkDiv.className = 'link-card-message';
+        linkDiv.dataset.id = msg.id;
+        linkDiv.dataset.msgId = msg.id;
+        
+        const ld = msg.linkData;
+        // 使用 emoji 代替不存在的 Font Awesome 品牌图标
+        const siteEmoji = ld.siteName === '哔哩哔哩' ? '📺' : 
+                        ld.siteName === 'YouTube' ? '▶️' :
+                        ld.siteName === '微博' ? '📢' :
+                        ld.siteName === '抖音' ? '🎵' :
+                        ld.siteName === 'X' ? '✖️' :
+                        ld.siteName === '小红书' ? '📕' :
+                        '🔗';
+        
+        linkDiv.innerHTML = `
+            <a href="${ld.url}" target="_blank" rel="noopener noreferrer" class="link-card-inner">
+                <div class="link-card-icon">
+                    <span style="font-size:20px;">${siteEmoji}</span>
+                </div>
+                <div class="link-card-content">
+                    <div class="link-card-site">${ld.siteName || ld.domain}</div>
+                    <div class="link-card-url">${ld.url.length > 50 ? ld.url.substring(0, 50) + '...' : ld.url}</div>
+                </div>
+                <div class="link-card-arrow"><i class="fas fa-external-link-alt"></i></div>
+            </a>
+            <div class="link-card-meta" style="display:none;">
+                <button class="link-card-delete" title="删除" onclick="(function(btn){const id=btn.closest('[data-id]').dataset.id;const idx=messages.findIndex(m=>String(m.id)===String(id));if(idx>-1){messages.splice(idx,1);renderMessages();throttledSaveData();}})(this)"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+        
+        linkDiv.addEventListener('mouseenter', () => {
+            linkDiv.querySelector('.link-card-meta').style.display = 'flex';
+        });
+        linkDiv.addEventListener('mouseleave', () => {
+            linkDiv.querySelector('.link-card-meta').style.display = 'none';
+        });
+        
+        fragment.appendChild(linkDiv);
+        lastSenderRef.current = 'system';
+        return fragment;
+    }
+
     let showTimestamp = true;
     if (settings.timeFormat === 'off') {
         showTimestamp = false;
@@ -1311,6 +1356,7 @@ const addMessage = (message) => {
 
     throttledSaveData();
 };
+window.addMessage = addMessage;
 
         window._addCallEvent = (icon, label, detail) => {
             addMessage({
@@ -2296,8 +2342,8 @@ function showModal(modalElement, focusElement = null) {
 
         function getStorageKey(baseKey) {
             if (!SESSION_ID) {
-                console.error('[getStorageKey] SESSION_ID 尚未初始化，拒绝生成存储键:', baseKey);
-                throw new Error('SESSION_ID 未初始化，存储操作已中止');
+                console.warn('[getStorageKey] SESSION_ID 尚未初始化，返回临时键:', baseKey);
+                return `${APP_PREFIX}temp_${baseKey}`;
             }
             return `${APP_PREFIX}${SESSION_ID}_${baseKey}`;
         }
