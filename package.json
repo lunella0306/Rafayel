@@ -1,0 +1,11 @@
+{
+  "name": "rafayel-api",
+  "version": "1.0.0",
+  "description": "小红书/抖音解析 API",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}
