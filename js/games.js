@@ -1,3 +1,94 @@
+// ========== 小红书解析功能 ==========
+const XHS_API_BASE = 'https://yurafayel.vercel.app';
+
+const XiaohongshuParser = {
+    // 从链接中提取笔记ID
+    extractNoteId(url) {
+        const patterns = [
+            /xhslink\.com\/([a-zA-Z0-9]+)/,
+            /xiaohongshu\.com\/explore\/([a-zA-Z0-9]+)/,
+            /xiaohongshu\.com\/discovery\/item\/([a-zA-Z0-9]+)/
+        ];
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match) return match[1];
+        }
+        return null;
+    },
+
+    // 解析小红书链接
+    async parse(url) {
+        const noteId = this.extractNoteId(url);
+        if (!noteId) {
+            throw new Error('无法识别的小红书链接格式');
+        }
+
+        try {
+            const response = await fetch(`${XHS_API_BASE}/api/xhs?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || '解析失败');
+            }
+
+            return data.data;
+        } catch (error) {
+            console.error('小红书解析错误:', error);
+            throw error;
+        }
+    },
+
+    // 显示解析结果
+    showResult(data, container) {
+        const html = `
+            <div class="xhs-result" style="padding: 16px; background: var(--secondary-bg); border-radius: 12px; margin-top: 12px;">
+                <div class="xhs-author" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <img src="${data.authorAvatar || ''}" class="xhs-avatar" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23ddd%22/><text x=%2250%22 y=%2260%22 text-anchor=%22middle%22 font-size=%2240%22>👤</text></svg>'">
+                    <span class="xhs-author-name" style="font-weight: 600; color: var(--text-primary);">${data.authorName || '未知作者'}</span>
+                </div>
+                <div class="xhs-content" style="color: var(--text-primary); line-height: 1.6; margin-bottom: 12px; white-space: pre-wrap;">${data.content || ''}</div>
+                <div class="xhs-images" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px;">
+                    ${(data.images || []).map(img => `<img src="${img}" style="width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open('${img}', '_blank')">`).join('')}
+                </div>
+            </div>
+        `;
+        container.innerHTML = html;
+    }
+};
+
+// 打开小红书解析弹窗
+function openXiaohongshuModal() {
+    const modal = document.getElementById('xhs-parser-modal');
+    if (modal) {
+        document.getElementById('xhs-url-input').value = '';
+        document.getElementById('xhs-result-container').innerHTML = '';
+        showModal(modal);
+    }
+}
+
+// 解析小红书链接
+async function parseXiaohongshuLink() {
+    const urlInput = document.getElementById('xhs-url-input');
+    const resultContainer = document.getElementById('xhs-result-container');
+    const url = urlInput.value.trim();
+
+    if (!url) {
+        showToast('请输入小红书链接');
+        return;
+    }
+
+    resultContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);"><i class="fas fa-spinner fa-spin"></i> 正在解析...</div>';
+
+    try {
+        const data = await XiaohongshuParser.parse(url);
+        XiaohongshuParser.showResult(data, resultContainer);
+    } catch (error) {
+        resultContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #ef4444;"><i class="fas fa-exclamation-circle"></i> ${error.message}</div>`;
+    }
+}
+
+// ========== 原有功能 ==========
+
 function renderStatsContent() {
             const statsContent = DOMElements.statsModal.content;
 
@@ -1381,6 +1472,77 @@ function initComboMenu() {
                 return;
             }
             
+            // 检测是否是小红书链接
+            const isXiaohongshu = cleanUrl.includes('xiaohongshu.com') || cleanUrl.includes('xhslink.com');
+            
+            if (isXiaohongshu) {
+                // 使用完整的小红书解析功能
+                previewArea.style.display = 'block';
+                previewArea.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:center;padding:20px;color:var(--text-secondary);">
+                        <i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i> 正在解析小红书笔记...
+                    </div>
+                `;
+                
+                try {
+                    const data = await XiaohongshuParser.parse(cleanUrl);
+                    
+                    // 显示解析结果
+                    XiaohongshuParser.showResult(data, previewArea);
+                    
+                    // 添加发送按钮
+                    const sendResultBtn = document.createElement('button');
+                    sendResultBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送到聊天';
+                    sendResultBtn.style.cssText = `
+                        width:100%;margin-top:12px;padding:10px;border:none;border-radius:10px;cursor:pointer;
+                        background:linear-gradient(135deg, var(--accent-color), rgba(var(--accent-color-rgb),0.8));
+                        color:#fff;font-size:14px;font-weight:600;
+                    `;
+                    sendResultBtn.onclick = () => {
+                        // 发送小红书卡片消息
+                        const xhsCard = {
+                            id: Date.now(),
+                            sender: 'user',
+                            text: '',
+                            timestamp: new Date(),
+                            status: 'sent',
+                            type: 'xiaohongshu',
+                            xhsData: {
+                                url: cleanUrl,
+                                authorName: data.authorName || '未知作者',
+                                authorAvatar: data.authorAvatar || '',
+                                content: data.content || '',
+                                images: data.images || []
+                            }
+                        };
+                        
+                        if (typeof window.addMessage === 'function') {
+                            window.addMessage(xhsCard);
+                        }
+                        if (typeof playSound === 'function') playSound('send');
+                        picker.classList.remove('active');
+                        
+                        // 触发回复
+                        if (typeof settings !== 'undefined' && typeof simulateReply === 'function') {
+                            const delayRange = settings.replyDelayMax - settings.replyDelayMin;
+                            setTimeout(simulateReply, settings.replyDelayMin + Math.random() * delayRange);
+                        }
+                        
+                        if (typeof showNotification === 'function') showNotification('已发送小红书笔记', 'success', 1500);
+                    };
+                    previewArea.appendChild(sendResultBtn);
+                    
+                } catch (error) {
+                    previewArea.innerHTML = `
+                        <div style="text-align:center;padding:20px;color:#ef4444;">
+                            <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i>
+                            ${error.message || '解析失败，请稍后重试'}
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
             // 显示加载状态
             previewArea.style.display = 'block';
             previewArea.innerHTML = `
@@ -2223,126 +2385,3 @@ function initComboMenu() {
     };
 
 })();
-
-// ========== 小红书解析功能 ==========
-// 配置：请将此地址改为你的 Vercel 部署地址
-const XHS_API_BASE = 'https://你的vercel地址.vercel.app';
-
-/**
- * 解析小红书笔记
- */
-async function parseXiaohongshu() {
-    const urlInput = document.getElementById('xhs-url-input');
-    const resultContainer = document.getElementById('xhs-result-container');
-    const loading = document.getElementById('xhs-loading');
-    const errorDiv = document.getElementById('xhs-error');
-    const parseBtn = document.getElementById('xhs-parse-btn');
-    
-    const url = urlInput.value.trim();
-    
-    if (!url) {
-        showNotification('请输入小红书链接', 'error');
-        return;
-    }
-    
-    // 检查链接格式
-    if (!url.includes('xiaohongshu.com') && !url.includes('xhslink.com')) {
-        showNotification('请输入正确的小红书链接', 'error');
-        return;
-    }
-    
-    // 显示加载状态
-    loading.style.display = 'block';
-    resultContainer.style.display = 'none';
-    errorDiv.style.display = 'none';
-    parseBtn.disabled = true;
-    
-    try {
-        const apiUrl = `${XHS_API_BASE}/api/xhs?url=${encodeURIComponent(url)}`;
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        
-        loading.style.display = 'none';
-        parseBtn.disabled = false;
-        
-        if (data.success) {
-            displayXhsResult(data.data);
-            resultContainer.style.display = 'block';
-            showNotification('解析成功！', 'success');
-        } else {
-            errorDiv.textContent = data.error || '解析失败，请稍后重试';
-            errorDiv.style.display = 'block';
-        }
-    } catch (error) {
-        console.error('解析错误:', error);
-        loading.style.display = 'none';
-        parseBtn.disabled = false;
-        errorDiv.textContent = '网络错误，请检查 API 地址是否正确';
-        errorDiv.style.display = 'block';
-    }
-}
-
-/**
- * 显示解析结果
- */
-function displayXhsResult(data) {
-    // 作者头像
-    const avatarImg = document.getElementById('xhs-author-avatar');
-    if (data.author?.avatar) {
-        avatarImg.src = data.author.avatar;
-        avatarImg.style.display = 'block';
-    } else {
-        avatarImg.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23ff2442"/><text x="50" y="55" text-anchor="middle" fill="white" font-size="30">红</text></svg>';
-    }
-    
-    // 作者名字
-    document.getElementById('xhs-author-name').textContent = data.author?.name || '未知作者';
-    
-    // 笔记内容
-    const contentDiv = document.getElementById('xhs-note-content');
-    const content = data.title ? `${data.title}\n\n${data.description || ''}` : (data.description || '暂无内容');
-    contentDiv.textContent = content;
-    
-    // 图片
-    const imagesContainer = document.getElementById('xhs-images-container');
-    imagesContainer.innerHTML = '';
-    
-    if (data.images && data.images.length > 0) {
-        data.images.forEach((img, index) => {
-            const imgEl = document.createElement('img');
-            imgEl.src = img.url || img;
-            imgEl.alt = `图片 ${index + 1}`;
-            imgEl.loading = 'lazy';
-            imgEl.onclick = () => {
-                // 点击图片放大预览
-                window.open(img.url || img, '_blank');
-            };
-            imgEl.onerror = () => {
-                imgEl.style.display = 'none';
-            };
-            imagesContainer.appendChild(imgEl);
-        });
-    } else {
-        imagesContainer.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);font-size:12px;padding:20px;">暂无图片</div>';
-    }
-    
-    // 统计数据
-    document.getElementById('xhs-likes').textContent = formatNumber(data.likes || 0);
-    document.getElementById('xhs-collects').textContent = formatNumber(data.collects || 0);
-    document.getElementById('xhs-comments').textContent = formatNumber(data.comments || 0);
-}
-
-/**
- * 格式化数字
- */
-function formatNumber(num) {
-    if (num >= 10000) {
-        return (num / 10000).toFixed(1) + 'w';
-    } else if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'k';
-    }
-    return num.toString();
-}
-
-// 暴露到全局
-window.parseXiaohongshu = parseXiaohongshu;
